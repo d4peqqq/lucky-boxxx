@@ -1,43 +1,47 @@
 -- ================================================
---   GREATHUB - SIMPLE UI VERSION
---   Kick a Lucky Block
+--   GREATHUB - MODERN HUB VERSION
+--   Game: Brainrot / Lucky Block
 -- ================================================
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local VirtualUser = game:GetService("VirtualUser")
 local UserInputService = game:GetService("UserInputService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 
 local LP = Players.LocalPlayer
 local PGui = LP:WaitForChild("PlayerGui")
 
--- Bersihkan UI lama
-local oldGui = PGui:FindFirstChild("SimpleKickUI")
-if oldGui then oldGui:Destroy() end
+-- KOORDINAT SAFE ZONE
+local SafeZonePos = Vector3.new(695.3816528320312, 2.998032569885254, 223.67698669433594)
 
 local S = {
-    AutoGo   = false,
-    AutoKick = false,
+    AutoFarm = false,
     KickMode = "Sempurna",
-    Speed    = 24,
-    Timing   = { Sempurna = 0.68, Hebat = 0.42, Bagus = 0.22 },
-    SpawnDelay = 0.01,
-    JumpChance = 0.28,
+    Timing = { Sempurna = 0.68, Hebat = 0.42, Bagus = 0.22 },
 }
 
--- Buat UI
+-- Bersihkan UI Lama
+for _, v in ipairs(PGui:GetChildren()) do
+    if v.Name == "GreathubUI" or v.Name == "SimpleKickUI" then
+        v:Destroy()
+    end
+end
+
+-- ==========================================
+-- 1. UI SETUP (MODERN HUB)
+-- ==========================================
 local SG = Instance.new("ScreenGui")
-SG.Name = "SimpleKickUI"
+SG.Name = "GreathubUI"
 SG.ResetOnSpawn = false
 SG.Parent = PGui
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 250, 0, 280)
-MainFrame.Position = UDim2.new(0.5, -125, 0.5, -140)
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+MainFrame.Size = UDim2.new(0, 500, 0, 320)
+MainFrame.Position = UDim2.new(0.5, -250, 0.5, -160)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 MainFrame.BorderSizePixel = 0
-MainFrame.Parent = SG
 MainFrame.Active = true
+MainFrame.Parent = SG
 
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 8)
@@ -66,83 +70,167 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
+local Sidebar = Instance.new("Frame")
+Sidebar.Size = UDim2.new(0, 140, 1, 0)
+Sidebar.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+Sidebar.BorderSizePixel = 0
+Sidebar.Parent = MainFrame
+
+local SidebarCorner = Instance.new("UICorner")
+SidebarCorner.CornerRadius = UDim.new(0, 8)
+SidebarCorner.Parent = Sidebar
+
+local FixCorner = Instance.new("Frame")
+FixCorner.Size = UDim2.new(0, 10, 1, 0)
+FixCorner.Position = UDim2.new(1, -10, 0, 0)
+FixCorner.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+FixCorner.BorderSizePixel = 0
+FixCorner.Parent = Sidebar
+
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.Position = UDim2.new(0, 0, 0, 10)
 Title.BackgroundTransparency = 1
-Title.Text = "Kick Block - Simple"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Text = "GreatHub"
+Title.TextColor3 = Color3.fromRGB(100, 200, 255)
 Title.Font = Enum.Font.GothamBold
-Title.TextSize = 16
-Title.Parent = MainFrame
+Title.TextSize = 20
+Title.Parent = Sidebar
+
+local TabContainer = Instance.new("Frame")
+TabContainer.Size = UDim2.new(1, -150, 1, -20)
+TabContainer.Position = UDim2.new(0, 150, 0, 10)
+TabContainer.BackgroundTransparency = 1
+TabContainer.Parent = MainFrame
+
+local Tabs = {}
+local function createTab(name, isActive)
+    local frame = Instance.new("ScrollingFrame")
+    frame.Size = UDim2.new(1, 0, 1, -30)
+    frame.Position = UDim2.new(0, 0, 0, 30)
+    frame.BackgroundTransparency = 1
+    frame.BorderSizePixel = 0
+    frame.ScrollBarThickness = 4
+    frame.Visible = isActive
+    frame.Parent = TabContainer
+    
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0, 10)
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Parent = frame
+    
+    Tabs[name] = frame
+    return frame
+end
+
+local MainTab = createTab("Main", true)
+local SettingsTab = createTab("Settings", false)
+
+local function createTabBtn(y, name)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -20, 0, 35)
+    btn.Position = UDim2.new(0, 10, 0, y)
+    btn.BackgroundColor3 = Tabs[name].Visible and Color3.fromRGB(30, 30, 40) or Color3.fromRGB(20, 20, 25)
+    btn.Text = name
+    btn.TextColor3 = Tabs[name].Visible and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(150, 150, 150)
+    btn.Font = Enum.Font.GothamSemibold
+    btn.TextSize = 14
+    btn.Parent = Sidebar
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
+    
+    btn.MouseButton1Click:Connect(function()
+        for tName, tFrame in pairs(Tabs) do
+            tFrame.Visible = (tName == name)
+        end
+        for _, v in ipairs(Sidebar:GetChildren()) do
+            if v:IsA("TextButton") then
+                if v.Text == name then
+                    v.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+                    v.TextColor3 = Color3.fromRGB(255, 255, 255)
+                else
+                    v.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+                    v.TextColor3 = Color3.fromRGB(150, 150, 150)
+                end
+            end
+        end
+    end)
+end
+
+createTabBtn(70, "Main")
+createTabBtn(115, "Settings")
 
 local StatusLabel = Instance.new("TextLabel")
-StatusLabel.Size = UDim2.new(1, -20, 0, 20)
-StatusLabel.Position = UDim2.new(0, 10, 0, 40)
+StatusLabel.Size = UDim2.new(1, 0, 0, 20)
+StatusLabel.Position = UDim2.new(0, 0, 0, 0)
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.Text = "Status: Idle"
 StatusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
 StatusLabel.Font = Enum.Font.Gotham
-StatusLabel.TextSize = 12
+StatusLabel.TextSize = 13
 StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
-StatusLabel.Parent = MainFrame
+StatusLabel.Parent = TabContainer
 
 local function setStatus(txt, col)
     StatusLabel.Text = "Status: " .. txt
     StatusLabel.TextColor3 = col or Color3.fromRGB(180, 180, 180)
 end
 
-local function makeToggle(y, text, key)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -20, 0, 30)
-    btn.Position = UDim2.new(0, 10, 0, y)
-    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-    btn.Text = text .. " [OFF]"
-    btn.TextColor3 = Color3.fromRGB(255, 100, 100)
-    btn.Font = Enum.Font.GothamSemibold
-    btn.TextSize = 14
-    btn.Parent = MainFrame
+local function makeToggle(parent, text, key)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, -10, 0, 45)
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    frame.Parent = parent
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
+    corner.Parent = frame
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -70, 1, 0)
+    label.Position = UDim2.new(0, 15, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.Font = Enum.Font.GothamSemibold
+    label.TextSize = 14
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+    
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 50, 0, 25)
+    btn.Position = UDim2.new(1, -65, 0.5, -12.5)
+    btn.BackgroundColor3 = S[key] and Color3.fromRGB(100, 255, 100) or Color3.fromRGB(255, 100, 100)
+    btn.Text = S[key] and "ON" or "OFF"
+    btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 12
+    btn.Parent = frame
+    local corner2 = Instance.new("UICorner")
+    corner2.CornerRadius = UDim.new(0, 4)
+    corner2.Parent = btn
     
     btn.MouseButton1Click:Connect(function()
         S[key] = not S[key]
-        if S[key] then
-            btn.Text = text .. " [ON]"
-            btn.TextColor3 = Color3.fromRGB(100, 255, 100)
-        else
-            btn.Text = text .. " [OFF]"
-            btn.TextColor3 = Color3.fromRGB(255, 100, 100)
-        end
+        btn.BackgroundColor3 = S[key] and Color3.fromRGB(100, 255, 100) or Color3.fromRGB(255, 100, 100)
+        btn.Text = S[key] and "ON" or "OFF"
     end)
 end
 
-makeToggle(70, "Auto Go To Block", "AutoGo")
-makeToggle(110, "Auto Kick", "AutoKick")
+makeToggle(MainTab, "Auto Farm Brainrot", "AutoFarm")
 
-local ModeLabel = Instance.new("TextLabel")
-ModeLabel.Size = UDim2.new(1, -20, 0, 20)
-ModeLabel.Position = UDim2.new(0, 10, 0, 150)
-ModeLabel.BackgroundTransparency = 1
-ModeLabel.Text = "Mode: Sempurna"
-ModeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-ModeLabel.Font = Enum.Font.Gotham
-ModeLabel.TextSize = 12
-ModeLabel.TextXAlignment = Enum.TextXAlignment.Left
-ModeLabel.Parent = MainFrame
-
+-- Settings Tab
 local ModeBtn = Instance.new("TextButton")
-ModeBtn.Size = UDim2.new(0, 80, 0, 25)
-ModeBtn.Position = UDim2.new(1, -90, 0, 147)
-ModeBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 65)
-ModeBtn.Text = "Ganti Mode"
+ModeBtn.Size = UDim2.new(1, -10, 0, 40)
+ModeBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+ModeBtn.Text = "Kick Mode: " .. S.KickMode
 ModeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ModeBtn.Font = Enum.Font.Gotham
-ModeBtn.TextSize = 12
-ModeBtn.Parent = MainFrame
-local corner1 = Instance.new("UICorner")
-corner1.CornerRadius = UDim.new(0, 4)
-corner1.Parent = ModeBtn
+ModeBtn.Font = Enum.Font.GothamSemibold
+ModeBtn.TextSize = 14
+ModeBtn.Parent = SettingsTab
+local corner3 = Instance.new("UICorner")
+corner3.CornerRadius = UDim.new(0, 6)
+corner3.Parent = ModeBtn
 
 local modes = {"Sempurna", "Hebat", "Bagus"}
 local modeIndex = 1
@@ -150,69 +238,28 @@ ModeBtn.MouseButton1Click:Connect(function()
     modeIndex = modeIndex + 1
     if modeIndex > #modes then modeIndex = 1 end
     S.KickMode = modes[modeIndex]
-    ModeLabel.Text = "Mode: " .. S.KickMode
+    ModeBtn.Text = "Kick Mode: " .. S.KickMode
 end)
 
-local SpeedLabel = Instance.new("TextLabel")
-SpeedLabel.Size = UDim2.new(1, -20, 0, 20)
-SpeedLabel.Position = UDim2.new(0, 10, 0, 185)
-SpeedLabel.BackgroundTransparency = 1
-SpeedLabel.Text = "Speed: 24"
-SpeedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-SpeedLabel.Font = Enum.Font.Gotham
-SpeedLabel.TextSize = 12
-SpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
-SpeedLabel.Parent = MainFrame
-
-local SpdDown = Instance.new("TextButton")
-SpdDown.Size = UDim2.new(0, 30, 0, 25)
-SpdDown.Position = UDim2.new(1, -75, 0, 182)
-SpdDown.BackgroundColor3 = Color3.fromRGB(60, 60, 65)
-SpdDown.Text = "-"
-SpdDown.TextColor3 = Color3.fromRGB(255, 255, 255)
-SpdDown.Parent = MainFrame
-local corner2 = Instance.new("UICorner")
-corner2.CornerRadius = UDim.new(0, 4)
-corner2.Parent = SpdDown
-
-local SpdUp = Instance.new("TextButton")
-SpdUp.Size = UDim2.new(0, 30, 0, 25)
-SpdUp.Position = UDim2.new(1, -40, 0, 182)
-SpdUp.BackgroundColor3 = Color3.fromRGB(60, 60, 65)
-SpdUp.Text = "+"
-SpdUp.TextColor3 = Color3.fromRGB(255, 255, 255)
-SpdUp.Parent = MainFrame
-local corner3 = Instance.new("UICorner")
-corner3.CornerRadius = UDim.new(0, 4)
-corner3.Parent = SpdUp
-
-SpdDown.MouseButton1Click:Connect(function()
-    S.Speed = math.max(16, S.Speed - 1)
-    SpeedLabel.Text = "Speed: " .. S.Speed
-end)
-SpdUp.MouseButton1Click:Connect(function()
-    S.Speed = math.min(32, S.Speed + 1)
-    SpeedLabel.Text = "Speed: " .. S.Speed
-end)
-
-local CloseBtn = Instance.new("TextButton")
-CloseBtn.Size = UDim2.new(1, -20, 0, 30)
-CloseBtn.Position = UDim2.new(0, 10, 0, 230)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-CloseBtn.Text = "Tutup Script"
-CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.TextSize = 14
-CloseBtn.Parent = MainFrame
+local DestroyBtn = Instance.new("TextButton")
+DestroyBtn.Size = UDim2.new(1, -10, 0, 40)
+DestroyBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+DestroyBtn.Text = "Tutup Script"
+DestroyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+DestroyBtn.Font = Enum.Font.GothamBold
+DestroyBtn.TextSize = 14
+DestroyBtn.Parent = SettingsTab
 local corner4 = Instance.new("UICorner")
 corner4.CornerRadius = UDim.new(0, 6)
-corner4.Parent = CloseBtn
+corner4.Parent = DestroyBtn
 
--- Core Functions
 
+-- ==========================================
+-- 2. CORE LOGIC
+-- ==========================================
 local function findTendang()
     for _, sg in ipairs(PGui:GetChildren()) do
-        if sg:IsA("ScreenGui") and sg.Name ~= "SimpleKickUI" then
+        if sg:IsA("ScreenGui") and sg.Name ~= "GreathubUI" then
             for _, v in ipairs(sg:GetDescendants()) do
                 if v:IsA("TextButton") or v:IsA("ImageButton") then
                     local txt = ""
@@ -222,11 +269,9 @@ local function findTendang()
                         local label = v:FindFirstChildWhichIsA("TextLabel")
                         if label then txt = label.Text end
                     end
-                    
                     local name = v.Name
-                    
                     if txt:upper():find("TENDANG") or txt:upper():find("KICK") or name:upper():find("KICK") or name:upper():find("TENDANG") then
-                        if v.Visible then -- Menghapus syarat v.Active karena kadang developer men-disable Active sementara
+                        if v.Visible then
                             return v
                         end
                     end
@@ -239,8 +284,6 @@ end
 
 local function clickBtn(btn)
     if not btn then return end
-    
-    -- Menggunakan getconnections yang aman dan tidak terdeteksi
     local clicked = false
     pcall(function()
         for _, conn in ipairs(getconnections(btn.MouseButton1Click)) do
@@ -254,37 +297,12 @@ local function clickBtn(btn)
             clicked = true
         end
     end)
-
-    -- Jika getconnections gagal/tidak didukung, gunakan Roblox Native Signals
     if not clicked then
         pcall(function() btn.MouseButton1Down:Fire() end)
         pcall(function() task.wait(0.01) btn.MouseButton1Up:Fire() end)
         pcall(function() btn.MouseButton1Click:Fire() end)
         pcall(function() btn.Activated:Fire() end)
     end
-end
-
-local function findBlock()
-    local ws = game:GetService("Workspace")
-    for _, v in ipairs(ws:GetDescendants()) do
-        if v:IsA("BasePart") then
-            local n = v.Name:lower()
-            if n:find("lucky") or n:find("block") then
-                if v.Size.Y < 6 and v.Size.X < 6 then
-                    return v
-                end
-            end
-        end
-    end
-    return nil
-end
-
-local function setSpeed(spd)
-    -- dimatikan sementara untuk menghindari deteksi WalkSpeed anti-cheat
-    -- local c = LP.Character
-    -- if not c then return end
-    -- local h = c:FindFirstChildOfClass("Humanoid")
-    -- if h then h.WalkSpeed = spd end
 end
 
 local function walkTo(targetPos)
@@ -294,65 +312,46 @@ local function walkTo(targetPos)
     local hum = c:FindFirstChildOfClass("Humanoid")
     if not hrp or not hum then return end
 
-    -- setSpeed(S.Speed) -- Dinonaktifkan agar tidak kena kick
-
-    local maxTime = 8
+    local maxTime = 15 -- Batas waktu jalan max 15 detik
     local elapsed = 0
     local arrived = false
 
     hum:MoveTo(targetPos)
 
-    local jumpConn
-    jumpConn = RunService.Heartbeat:Connect(function(dt)
+    local walkConn
+    walkConn = RunService.Heartbeat:Connect(function(dt)
         elapsed = elapsed + dt
-        if not S.AutoGo or elapsed > maxTime then
-            jumpConn:Disconnect()
+        if not S.AutoFarm or elapsed > maxTime then
+            walkConn:Disconnect()
             arrived = true
             return
         end
         local dist = (hrp.Position - targetPos).Magnitude
-        if dist < 4 then
-            jumpConn:Disconnect()
+        if dist < 5 then
+            walkConn:Disconnect()
             arrived = true
             return
         end
         if elapsed % 1.5 < dt then
             hum:MoveTo(targetPos)
         end
-        if math.random() < S.JumpChance * dt then
+        -- Auto Jump jika tersangkut
+        if math.random() < 0.2 * dt then
             hum.Jump = true
         end
     end)
 
-    local t = 0
-    while not arrived and t < maxTime do
-        task.wait(0.1)
-        t = t + 0.1
-    end
-
-    -- setSpeed(16)
+    while not arrived do task.wait(0.1) end
 end
 
-local function fireRemotes(targetBlock)
-    -- 1. Fire ProximityPrompt / ClickDetector yang menempel di block (AMAN)
-    if targetBlock then
-        for _, v in ipairs(targetBlock:GetDescendants()) do
-            if v:IsA("ProximityPrompt") then
-                pcall(function() fireproximityprompt(v) end)
-            elseif v:IsA("ClickDetector") then
-                pcall(function() fireclickdetector(v) end)
-            end
-        end
-    end
-    
-    -- Catatan: RemoteEvent blind firing dihapus karena memicu Anti-Cheat (Error Code: 267)
-end
-
--- Main Loop
+-- ==========================================
+-- 3. MAIN LOOP (AUTO FARM BRAINROT)
+-- ==========================================
 local busy = false
 local loopConn
+
 loopConn = RunService.Heartbeat:Connect(function()
-    if not (S.AutoGo or S.AutoKick) then
+    if not S.AutoFarm then
         busy = false
         return
     end
@@ -360,74 +359,69 @@ loopConn = RunService.Heartbeat:Connect(function()
     busy = true
 
     task.spawn(function()
-        local currentBlock = nil
-        if S.AutoGo then
-            setStatus("Mencari Block...", Color3.fromRGB(255, 255, 100))
-            currentBlock = findBlock()
-            if currentBlock then
-                setStatus("Menuju Block...", Color3.fromRGB(100, 200, 255))
-                task.wait(S.SpawnDelay)
-                local dest = currentBlock.Position + Vector3.new(0, -currentBlock.Size.Y/2 + 1, 3.5)
-                walkTo(dest)
-                setStatus("Di posisi kick!", Color3.fromRGB(100, 255, 100))
-            else
-                setStatus("Block tak ditemukan", Color3.fromRGB(200, 100, 100))
-                task.wait(1)
-                busy = false
-                return
-            end
+        local c = LP.Character
+        local hrp = c and c:FindFirstChild("HumanoidRootPart")
+        if not hrp then
+            busy = false
+            return
+        end
+
+        -- Step 1: Teleport ke Safe Zone jika posisinya jauh
+        local distToSafe = (hrp.Position - SafeZonePos).Magnitude
+        if distToSafe > 20 then
+            setStatus("Teleport ke Safe Zone...", Color3.fromRGB(200, 200, 255))
+            hrp.CFrame = CFrame.new(SafeZonePos + Vector3.new(0, 3, 0))
+            task.wait(1.5) -- Tunggu karakter stabil
+        end
+
+        -- Step 2: Diam di Safe Zone dan Tunggu Tombol Kick
+        setStatus("Menunggu Block / Tombol Kick...", Color3.fromRGB(255, 255, 100))
+        local btn = nil
+        local waited = 0
+        while waited < 10 do -- Tunggu 10 detik
+            btn = findTendang()
+            if btn then break end
+            task.wait(0.2)
+            waited = waited + 0.2
+        end
+
+        if not btn then
+            setStatus("Tombol tak kunjung muncul", Color3.fromRGB(200, 100, 100))
+            task.wait(1)
+            busy = false
+            return
+        end
+
+        -- Step 3: Nendang
+        local delayTime = S.Timing[S.KickMode] or 0.68
+        setStatus("Timing " .. S.KickMode, Color3.fromRGB(255, 255, 100))
+        task.wait(delayTime)
+
+        clickBtn(btn)
+        setStatus("Kicked!", Color3.fromRGB(100, 255, 100))
+        
+        -- Step 4: Menunggu Box Mendarat & Karakter Terlempar (Berubah jadi brainrot)
+        setStatus("Menunggu efek brainrot...", Color3.fromRGB(255, 150, 50))
+        task.wait(3.5) -- Waktu delay landing
+        
+        -- Cek apakah posisi kita terlempar jauh dari Safe Zone setelah mendarat
+        local newDist = (hrp.Position - SafeZonePos).Magnitude
+        if newDist > 15 then
+            -- Step 5: JALAN KAKI PULANG KE SAFE ZONE (Membawa lari brainrot)
+            setStatus("Membawa lari ke Safe Zone...", Color3.fromRGB(100, 255, 150))
+            walkTo(SafeZonePos)
+            setStatus("Berhasil disetor!", Color3.fromRGB(100, 255, 100))
         else
-            currentBlock = findBlock()
+            setStatus("Menunggu block baru...", Color3.fromRGB(200, 200, 200))
         end
 
-        if S.AutoKick then
-            setStatus("Tunggu tombol...", Color3.fromRGB(255, 255, 100))
-            local btn = nil
-            local waited = 0
-            while waited < 6 do
-                btn = findTendang()
-                if btn then break end
-                task.wait(0.05)
-                waited = waited + 0.05
-            end
-
-            local delayTime = S.Timing[S.KickMode] or 0.68
-            setStatus("Timing " .. S.KickMode, Color3.fromRGB(255, 255, 100))
-            task.wait(delayTime)
-
-            if btn then
-                clickBtn(btn)
-            else
-                setStatus("Mencoba eksekusi Remote...", Color3.fromRGB(255, 150, 50))
-            end
-            
-            -- EKSEKUSI REMOTES SEBAGAI BACKUP/UTAMA
-            fireRemotes(currentBlock)
-
-            setStatus("Kicked!", Color3.fromRGB(100, 255, 100))
-            task.wait(1.5)
-        end
-
-        task.wait(0.3)
+        task.wait(1)
         busy = false
     end)
 end)
 
-local childConn = game:GetService("Workspace").ChildAdded:Connect(function(child)
-    task.wait(S.SpawnDelay)
-    if S.AutoGo or S.AutoKick then
-        if child:IsA("BasePart") or child:IsA("Model") then
-            local n = child.Name:lower()
-            if n:find("lucky") or n:find("block") then
-                busy = false
-            end
-        end
-    end
-end)
-
-CloseBtn.MouseButton1Click:Connect(function()
+DestroyBtn.MouseButton1Click:Connect(function()
     if loopConn then loopConn:Disconnect() end
-    if childConn then childConn:Disconnect() end
     SG:Destroy()
 end)
 

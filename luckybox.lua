@@ -601,16 +601,16 @@ loopConn = RunService.Heartbeat:Connect(function()
         -- Fallback 1: VirtualUser
         pcall(function()
             local vu = game:GetService("VirtualUser")
-            vu:Button1Down(Vector2.new(0,0))
+            vu:Button1Down(Vector2.new(50,50))
             task.wait(0.01)
-            vu:Button1Up(Vector2.new(0,0))
+            vu:Button1Up(Vector2.new(50,50))
         end)
 
-        -- Fallback 2: VirtualInputManager (Tengah layar)
+        -- Fallback 2: VirtualInputManager (Tengah atas layar, agar tidak nabrak UI Hub)
         pcall(function()
             local vim = game:GetService("VirtualInputManager")
             local cam = workspace.CurrentCamera
-            local cx, cy = cam.ViewportSize.X / 2, cam.ViewportSize.Y / 2
+            local cx, cy = cam.ViewportSize.X / 2, 50
             vim:SendMouseButtonEvent(cx, cy, 0, true, game, 1)
             task.wait(0.02)
             vim:SendMouseButtonEvent(cx, cy, 0, false, game, 1)

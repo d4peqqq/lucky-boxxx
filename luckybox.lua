@@ -258,7 +258,7 @@ corner4.Parent = DestroyBtn
 -- 2. CORE LOGIC
 -- ==========================================
 local function findTendang()
-    -- Prioritaskan tombol dengan teks persis "KICK!" atau "KICK" untuk menghindari tombol Power Meter
+    -- Prioritaskan tombol dengan teks KICK tapi BUKAN TAP
     
     -- 1. Cari di PlayerGui
     for _, sg in ipairs(PGui:GetChildren()) do
@@ -274,8 +274,7 @@ local function findTendang()
                     end
                     
                     local txtUp = txt:upper()
-                    -- Cari teks yang persis "KICK!" atau "KICK"
-                    if txtUp == "KICK!" or txtUp == "KICK" then
+                    if (txtUp:find("KICK") or txtUp:find("TENDANG")) and not txtUp:find("TAP") then
                         if v.Visible then return v end
                     end
                 end
@@ -296,7 +295,7 @@ local function findTendang()
             end
             
             local txtUp = txt:upper()
-            if txtUp == "KICK!" or txtUp == "KICK" then
+            if (txtUp:find("KICK") or txtUp:find("TENDANG")) and not txtUp:find("TAP") then
                 return v
             end
         end
@@ -447,7 +446,7 @@ loopConn = RunService.Heartbeat:Connect(function()
         end
 
         -- Step 3: Nendang
-        if btn and not tapBtn then
+        if btn then
             setStatus("Klik Tombol KICK!", Color3.fromRGB(255, 200, 50))
             clickBtn(btn) -- KLIK PERTAMA: Memulai tendangan & memunculkan bar
         end

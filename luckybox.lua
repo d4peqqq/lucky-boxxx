@@ -215,9 +215,18 @@ local function findTendang()
         if sg:IsA("ScreenGui") and sg.Name ~= "SimpleKickUI" then
             for _, v in ipairs(sg:GetDescendants()) do
                 if v:IsA("TextButton") or v:IsA("ImageButton") then
-                    local txt = v:IsA("TextButton") and v.Text or ""
-                    if txt:upper():find("TENDANG") or txt:upper():find("KICK") then
-                        if v.Visible and v.Active then
+                    local txt = ""
+                    if v:IsA("TextButton") then
+                        txt = v.Text
+                    else
+                        local label = v:FindFirstChildWhichIsA("TextLabel")
+                        if label then txt = label.Text end
+                    end
+                    
+                    local name = v.Name
+                    
+                    if txt:upper():find("TENDANG") or txt:upper():find("KICK") or name:upper():find("KICK") or name:upper():find("TENDANG") then
+                        if v.Visible then -- Menghapus syarat v.Active karena kadang developer men-disable Active sementara
                             return v
                         end
                     end
@@ -230,18 +239,42 @@ end
 
 local function clickBtn(btn)
     if not btn then return end
-    pcall(function() btn.MouseButton1Down:Fire() end)
-    task.wait(0.03)
-    pcall(function() btn.MouseButton1Up:Fire() end)
-    pcall(function() btn.MouseButton1Click:Fire() end)
+    
+    -- Method 1: Menggunakan firesignal (Biasa digunakan di Executor seperti Delta)
+    pcall(function() firesignal(btn.MouseButton1Down) end)
+    pcall(function() firesignal(btn.MouseButton1Click) end)
+    pcall(function() firesignal(btn.Activated) end)
+    
+    -- Method 2: Executor getconnections (Alternatif yang sangat kuat)
     pcall(function()
+        for _, conn in ipairs(getconnections(btn.MouseButton1Click)) do
+            pcall(function() conn.Function() end)
+            pcall(function() conn:Fire() end)
+        end
+    end)
+    pcall(function()
+        for _, conn in ipairs(getconnections(btn.Activated)) do
+            pcall(function() conn.Function() end)
+            pcall(function() conn:Fire() end)
+        end
+    end)
+
+    -- Method 3: Roblox Native Signals
+    pcall(function() btn.MouseButton1Down:Fire() end)
+    pcall(function() task.wait(0.01) btn.MouseButton1Up:Fire() end)
+    pcall(function() btn.MouseButton1Click:Fire() end)
+    pcall(function() btn.Activated:Fire() end)
+
+    -- Method 4: Virtual Input Manager (Paling murni, meniru klik asli)
+    pcall(function()
+        local vim = game:GetService("VirtualInputManager")
         local ap = btn.AbsolutePosition
         local as = btn.AbsoluteSize
-        local cx = ap.X + as.X/2
-        local cy = ap.Y + as.Y/2
-        VirtualUser:ClickButton2(Vector2.new(cx, cy))
+        local cx = ap.X + (as.X / 2)
+        local cy = ap.Y + (as.Y / 2) + 36 -- +36 biasanya untuk offset TopBar GUI Roblox
+        vim:SendMouseButtonEvent(cx, cy, 0, true, game, 1)
         task.wait(0.02)
-        VirtualUser:ClickButton1(Vector2.new(cx, cy))
+        vim:SendMouseButtonEvent(cx, cy, 0, false, game, 1)
     end)
 end
 

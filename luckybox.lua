@@ -234,7 +234,49 @@ end
 
 makeToggle(MainTab, "Auto Farm Brainrot", "AutoFarm")
 
+local function makeTextBox(parent, placeholder, callback)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, -10, 0, 45)
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    frame.Parent = parent
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = frame
+    
+    local tb = Instance.new("TextBox")
+    tb.Size = UDim2.new(1, -20, 1, 0)
+    tb.Position = UDim2.new(0, 10, 0, 0)
+    tb.BackgroundTransparency = 1
+    tb.Text = ""
+    tb.PlaceholderText = placeholder
+    tb.TextColor3 = Color3.fromRGB(255, 255, 255)
+    tb.Font = Enum.Font.Gotham
+    tb.TextSize = 12
+    tb.TextXAlignment = Enum.TextXAlignment.Left
+    tb.ClearTextOnFocus = false
+    tb.Parent = frame
+    
+    tb.FocusLost:Connect(function()
+        callback(tb.Text)
+    end)
+    return tb
+end
+
+S.UseFilter = false
+S.FilterList = {}
+
 -- Settings Tab
+makeToggle(SettingsTab, "Use Brainrot Filter", "UseFilter")
+makeTextBox(SettingsTab, "Filter: misal (Ambalabu, Mutated)", function(txt)
+    S.FilterList = {}
+    for word in string.gmatch(txt, '([^,]+)') do
+        local cleanWord = word:match("^%s*(.-)%s*$")
+        if cleanWord ~= "" then
+            table.insert(S.FilterList, cleanWord:upper())
+        end
+    end
+end)
+
 local ModeBtn = Instance.new("TextButton")
 ModeBtn.Size = UDim2.new(1, -10, 0, 40)
 ModeBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
@@ -592,15 +634,33 @@ loopConn = RunService.Heartbeat:Connect(function()
         local newDist = (hrp.Position - SafeZonePos).Magnitude
         if newDist > 15 then
             -- Step 5: JALAN KAKI PULANG KE SAFE ZONE (Membawa lari brainrot)
-            setStatus("Membawa lari ke Safe Zone...", Color3.fromRGB(100, 255, 150))
             
             local rollName = findBrainrotName()
             if rollName ~= "Unknown" and rollName ~= "" then
                 setLastRoll(rollName)
             end
             
-            walkTo(SafeZonePos)
-            setStatus("Berhasil disetor!", Color3.fromRGB(100, 255, 100))
+            -- Filter Logic
+            local shouldKeep = true
+            if S.UseFilter and #S.FilterList > 0 and rollName ~= "Unknown" then
+                shouldKeep = false
+                local rollUpper = rollName:upper()
+                for _, f in ipairs(S.FilterList) do
+                    if rollUpper:find(f) then
+                        shouldKeep = true
+                        break
+                    end
+                end
+            end
+            
+            if shouldKeep then
+                setStatus("Membawa lari ke Safe Zone...", Color3.fromRGB(100, 255, 150))
+                walkTo(SafeZonePos)
+                setStatus("Berhasil disetor!", Color3.fromRGB(100, 255, 100))
+            else
+                setStatus("Brainrot di-skip (Filter)", Color3.fromRGB(200, 150, 100))
+                -- Diam saja, loop berikutnya akan melakukan teleport ke Safe Zone untuk reset
+            end
         else
             setStatus("Menunggu block baru...", Color3.fromRGB(200, 200, 200))
         end

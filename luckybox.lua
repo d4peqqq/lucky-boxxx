@@ -424,10 +424,40 @@ loopConn = RunService.Heartbeat:Connect(function()
         setStatus("Timing " .. S.KickMode .. " ("..delayTime.."s)", Color3.fromRGB(255, 255, 100))
         task.wait(delayTime)
 
-        -- KLIK KEDUA: Menghentikan bar
-        clickBtn(btn)
+        -- KLIK KEDUA: Menghentikan bar (Mencari tombol 'Tap to Kick!' atau klik global)
+        local tapBtn = nil
+        for _, sg in ipairs(PGui:GetChildren()) do
+            if sg:IsA("ScreenGui") and sg.Name ~= "GreathubUI" then
+                for _, v in ipairs(sg:GetDescendants()) do
+                    if (v:IsA("TextButton") or v:IsA("ImageButton")) and v.Visible then
+                        local txt = v:IsA("TextButton") and v.Text or ""
+                        if not v:IsA("TextButton") then
+                            local label = v:FindFirstChildWhichIsA("TextLabel")
+                            if label then txt = label.Text end
+                        end
+                        if txt:upper():find("TAP") then
+                            tapBtn = v
+                        elseif v.Size.X.Scale >= 0.8 and v.Size.Y.Scale >= 0.8 then
+                            tapBtn = v -- Tangkap tombol transparan fullscreen
+                        end
+                    end
+                end
+            end
+        end
+
+        if tapBtn then
+            clickBtn(tapBtn)
+        end
         
-        -- Fallback: Klik di tengah layar (karena beberapa game meminta klik sembarang tempat)
+        -- Fallback 1: VirtualUser
+        pcall(function()
+            local vu = game:GetService("VirtualUser")
+            vu:Button1Down(Vector2.new(0,0))
+            task.wait(0.01)
+            vu:Button1Up(Vector2.new(0,0))
+        end)
+
+        -- Fallback 2: VirtualInputManager (Tengah layar)
         pcall(function()
             local vim = game:GetService("VirtualInputManager")
             local cam = workspace.CurrentCamera

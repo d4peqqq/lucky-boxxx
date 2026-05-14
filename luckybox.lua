@@ -367,6 +367,35 @@ local function walkTo(targetPos)
     while not arrived do task.wait(0.1) end
 end
 
+local function findTapBtn()
+    for _, sg in ipairs(PGui:GetChildren()) do
+        if sg:IsA("ScreenGui") and sg.Name ~= "GreathubUI" then
+            for _, v in ipairs(sg:GetDescendants()) do
+                if (v:IsA("TextButton") or v:IsA("ImageButton") or v:IsA("TextLabel")) and v.Visible then
+                    local txt = ""
+                    if v:IsA("TextButton") or v:IsA("TextLabel") then
+                        txt = v.Text
+                    else
+                        local label = v:FindFirstChildWhichIsA("TextLabel")
+                        if label then txt = label.Text end
+                    end
+                    if txt:upper():find("TAP") then
+                        if v:IsA("TextLabel") then
+                            if v.Parent and (v.Parent:IsA("TextButton") or v.Parent:IsA("ImageButton")) then
+                                return v.Parent
+                            end
+                        end
+                        return v
+                    elseif v:IsA("TextButton") and v.Size.X.Scale >= 0.8 and v.Size.Y.Scale >= 0.8 then
+                        return v
+                    end
+                end
+            end
+        end
+    end
+    return nil
+end
+
 -- ==========================================
 -- 3. MAIN LOOP (AUTO FARM BRAINROT)
 -- ==========================================
@@ -397,18 +426,20 @@ loopConn = RunService.Heartbeat:Connect(function()
             task.wait(1.5) -- Tunggu karakter stabil
         end
 
-        -- Step 2: Diam di Safe Zone dan Tunggu Tombol Kick
-        setStatus("Menunggu Block / Tombol Kick...", Color3.fromRGB(255, 255, 100))
+        -- Step 2: Diam di Safe Zone dan Tunggu Tombol Kick atau Bar Tap
+        setStatus("Menunggu Block / Bar Meteran...", Color3.fromRGB(255, 255, 100))
         local btn = nil
+        local tapBtn = nil
         local waited = 0
         while waited < 10 do -- Tunggu 10 detik
             btn = findTendang()
-            if btn then break end
+            tapBtn = findTapBtn()
+            if btn or tapBtn then break end
             task.wait(0.2)
             waited = waited + 0.2
         end
 
-        if not btn then
+        if not btn and not tapBtn then
             setStatus("Tombol tak kunjung muncul", Color3.fromRGB(200, 100, 100))
             task.wait(1)
             busy = false
@@ -416,8 +447,10 @@ loopConn = RunService.Heartbeat:Connect(function()
         end
 
         -- Step 3: Nendang
-        setStatus("Klik Tombol KICK!", Color3.fromRGB(255, 200, 50))
-        clickBtn(btn) -- KLIK PERTAMA: Memulai tendangan & memunculkan bar
+        if btn and not tapBtn then
+            setStatus("Klik Tombol KICK!", Color3.fromRGB(255, 200, 50))
+            clickBtn(btn) -- KLIK PERTAMA: Memulai tendangan & memunculkan bar
+        end
         
         -- Tunggu bar berjalan sampai Sempurna/Hebat/Bagus
         -- Delay disesuaikan agar lebih mudah dapat Excellent/Perfect (sekitar 0.55 detik)
@@ -425,28 +458,9 @@ loopConn = RunService.Heartbeat:Connect(function()
         setStatus("Timing " .. S.KickMode .. " ("..delayTime.."s)", Color3.fromRGB(255, 255, 100))
         task.wait(delayTime)
 
-        -- KLIK KEDUA: Menghentikan bar (Mencari tombol 'Tap to Kick!' atau klik global)
-        local tapBtn = nil
-        for _, sg in ipairs(PGui:GetChildren()) do
-            if sg:IsA("ScreenGui") and sg.Name ~= "GreathubUI" then
-                for _, v in ipairs(sg:GetDescendants()) do
-                    if (v:IsA("TextButton") or v:IsA("ImageButton")) and v.Visible then
-                        local txt = v:IsA("TextButton") and v.Text or ""
-                        if not v:IsA("TextButton") then
-                            local label = v:FindFirstChildWhichIsA("TextLabel")
-                            if label then txt = label.Text end
-                        end
-                        if txt:upper():find("TAP") then
-                            tapBtn = v
-                        elseif v.Size.X.Scale >= 0.8 and v.Size.Y.Scale >= 0.8 then
-                            tapBtn = v -- Tangkap tombol transparan fullscreen
-                        end
-                    end
-                end
-            end
-        end
-
-        if tapBtn then
+        -- KLIK KEDUA: Menghentikan bar
+        if not tapBtn then tapBtn = findTapBtn() end
+        if tapBtn and (tapBtn:IsA("TextButton") or tapBtn:IsA("ImageButton")) then
             clickBtn(tapBtn)
         end
         

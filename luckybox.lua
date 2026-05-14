@@ -416,11 +416,27 @@ loopConn = RunService.Heartbeat:Connect(function()
         end
 
         -- Step 3: Nendang
+        setStatus("Klik Tombol KICK!", Color3.fromRGB(255, 200, 50))
+        clickBtn(btn) -- KLIK PERTAMA: Memulai tendangan & memunculkan bar
+        
+        -- Tunggu bar berjalan sampai Sempurna/Hebat/Bagus
         local delayTime = S.Timing[S.KickMode] or 0.68
-        setStatus("Timing " .. S.KickMode, Color3.fromRGB(255, 255, 100))
+        setStatus("Timing " .. S.KickMode .. " ("..delayTime.."s)", Color3.fromRGB(255, 255, 100))
         task.wait(delayTime)
 
+        -- KLIK KEDUA: Menghentikan bar
         clickBtn(btn)
+        
+        -- Fallback: Klik di tengah layar (karena beberapa game meminta klik sembarang tempat)
+        pcall(function()
+            local vim = game:GetService("VirtualInputManager")
+            local cam = workspace.CurrentCamera
+            local cx, cy = cam.ViewportSize.X / 2, cam.ViewportSize.Y / 2
+            vim:SendMouseButtonEvent(cx, cy, 0, true, game, 1)
+            task.wait(0.02)
+            vim:SendMouseButtonEvent(cx, cy, 0, false, game, 1)
+        end)
+        
         setStatus("Kicked!", Color3.fromRGB(100, 255, 100))
         
         -- Step 4: Menunggu Box Mendarat & Karakter Terlempar (Berubah jadi brainrot)

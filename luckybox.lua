@@ -395,6 +395,66 @@ local function findTapBtn()
     return nil
 end
 
+local function waitForPerfect()
+    local rs = game:GetService("RunService")
+    task.wait(0.05) -- Beri waktu UI untuk muncul dan bergerak
+    
+    local candidates = {}
+    for _, v in ipairs(PGui:GetDescendants()) do
+        if (v:IsA("Frame") or v:IsA("ImageLabel")) and v.Visible then
+            table.insert(candidates, {
+                obj = v,
+                startScale = v.Size.Y.Scale,
+                startOffset = v.Size.Y.Offset
+            })
+        end
+    end
+    
+    local targetBar = nil
+    local t0 = tick()
+    while tick() - t0 < 0.25 do
+        rs.RenderStepped:Wait()
+        for _, c in ipairs(candidates) do
+            if c.obj.Parent and (c.obj.Size.Y.Scale ~= c.startScale or c.obj.Size.Y.Offset ~= c.startOffset) then
+                targetBar = c.obj
+                break
+            end
+        end
+        if targetBar then break end
+    end
+    
+    if targetBar then
+        setStatus("Membaca pergerakan bar...", Color3.fromRGB(150, 255, 150))
+        local timeout = tick()
+        while tick() - timeout < 2 do
+            rs.RenderStepped:Wait()
+            local scale = targetBar.Size.Y.Scale
+            if scale == 0 and targetBar.Parent and targetBar.Parent:IsA("GuiObject") then
+                local pSize = targetBar.Parent.AbsoluteSize.Y
+                if pSize > 0 then
+                    scale = targetBar.AbsoluteSize.Y / pSize
+                end
+            end
+            
+            -- Jika bar menggunakan persentase tinggi (0 ke 1)
+            local targetScale = 0.85 -- Perfect
+            if S.KickMode == "Hebat" then targetScale = 0.65 end
+            if S.KickMode == "Bagus" then targetScale = 0.35 end
+            
+            if scale >= targetScale then
+                break
+            end
+        end
+    else
+        -- Fallback ke statis timing jika bar tidak terdeteksi
+        local delayTime = S.Timing[S.KickMode] or 0.55
+        local start = tick()
+        while tick() - start < delayTime do
+            rs.RenderStepped:Wait()
+        end
+    end
+end
+
 -- ==========================================
 -- 3. MAIN LOOP (AUTO FARM BRAINROT)
 -- ==========================================
@@ -451,11 +511,9 @@ loopConn = RunService.Heartbeat:Connect(function()
             clickBtn(btn) -- KLIK PERTAMA: Memulai tendangan & memunculkan bar
         end
         
-        -- Tunggu bar berjalan sampai Sempurna/Hebat/Bagus
-        -- Delay disesuaikan agar lebih mudah dapat Excellent/Perfect (sekitar 0.55 detik)
-        local delayTime = S.Timing[S.KickMode] or 0.55
-        setStatus("Timing " .. S.KickMode .. " ("..delayTime.."s)", Color3.fromRGB(255, 255, 100))
-        task.wait(delayTime)
+        -- Tunggu bar berjalan sampai Sempurna/Hebat/Bagus dengan monitor dinamis
+        setStatus("Membidik " .. S.KickMode .. "...", Color3.fromRGB(255, 255, 100))
+        waitForPerfect()
 
         -- KLIK KEDUA: Menghentikan bar
         if not tapBtn then tapBtn = findTapBtn() end

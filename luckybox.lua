@@ -258,6 +258,9 @@ corner4.Parent = DestroyBtn
 -- 2. CORE LOGIC
 -- ==========================================
 local function findTendang()
+    -- Prioritaskan tombol dengan teks persis "KICK!" atau "KICK" untuk menghindari tombol Power Meter
+    
+    -- 1. Cari di PlayerGui
     for _, sg in ipairs(PGui:GetChildren()) do
         if sg:IsA("ScreenGui") and sg.Name ~= "GreathubUI" then
             for _, v in ipairs(sg:GetDescendants()) do
@@ -269,16 +272,36 @@ local function findTendang()
                         local label = v:FindFirstChildWhichIsA("TextLabel")
                         if label then txt = label.Text end
                     end
-                    local name = v.Name
-                    if txt:upper():find("TENDANG") or txt:upper():find("KICK") or name:upper():find("KICK") or name:upper():find("TENDANG") then
-                        if v.Visible then
-                            return v
-                        end
+                    
+                    local txtUp = txt:upper()
+                    -- Cari teks yang persis "KICK!" atau "KICK"
+                    if txtUp == "KICK!" or txtUp == "KICK" then
+                        if v.Visible then return v end
                     end
                 end
             end
         end
     end
+    
+    -- 2. Cari di Workspace (Jika tombolnya menempel di udara / BillboardGui)
+    local ws = game:GetService("Workspace")
+    for _, v in ipairs(ws:GetDescendants()) do
+        if v:IsA("TextButton") or v:IsA("ImageButton") then
+            local txt = ""
+            if v:IsA("TextButton") then
+                txt = v.Text
+            else
+                local label = v:FindFirstChildWhichIsA("TextLabel")
+                if label then txt = label.Text end
+            end
+            
+            local txtUp = txt:upper()
+            if txtUp == "KICK!" or txtUp == "KICK" then
+                return v
+            end
+        end
+    end
+    
     return nil
 end
 

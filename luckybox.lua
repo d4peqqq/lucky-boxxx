@@ -346,6 +346,33 @@ local function walkTo(targetPos)
     setSpeed(16)
 end
 
+local function fireRemotes(targetBlock)
+    -- 1. Fire ProximityPrompt / ClickDetector yang menempel di block
+    if targetBlock then
+        for _, v in ipairs(targetBlock:GetDescendants()) do
+            if v:IsA("ProximityPrompt") then
+                pcall(function() fireproximityprompt(v) end)
+            elseif v:IsA("ClickDetector") then
+                pcall(function() fireclickdetector(v) end)
+            end
+        end
+    end
+
+    -- 2. Fire RemoteEvents di ReplicatedStorage yang namanya mencurigakan
+    local RS = game:GetService("ReplicatedStorage")
+    for _, v in ipairs(RS:GetDescendants()) do
+        if v:IsA("RemoteEvent") then
+            local n = v.Name:lower()
+            if n:find("kick") or n:find("tendang") or n:find("hit") or n:find("damage") or n:find("reward") or n:find("lucky") then
+                pcall(function() v:FireServer() end)
+                if targetBlock then
+                    pcall(function() v:FireServer(targetBlock) end)
+                end
+            end
+        end
+    end
+end
+
 -- Main Loop
 local busy = false
 local loopConn
@@ -358,13 +385,14 @@ loopConn = RunService.Heartbeat:Connect(function()
     busy = true
 
     task.spawn(function()
+        local currentBlock = nil
         if S.AutoGo then
             setStatus("Mencari Block...", Color3.fromRGB(255, 255, 100))
-            local block = findBlock()
-            if block then
+            currentBlock = findBlock()
+            if currentBlock then
                 setStatus("Menuju Block...", Color3.fromRGB(100, 200, 255))
                 task.wait(S.SpawnDelay)
-                local dest = block.Position + Vector3.new(0, -block.Size.Y/2 + 1, 3.5)
+                local dest = currentBlock.Position + Vector3.new(0, -currentBlock.Size.Y/2 + 1, 3.5)
                 walkTo(dest)
                 setStatus("Di posisi kick!", Color3.fromRGB(100, 255, 100))
             else
@@ -373,6 +401,8 @@ loopConn = RunService.Heartbeat:Connect(function()
                 busy = false
                 return
             end
+        else
+            currentBlock = findBlock()
         end
 
         if S.AutoKick then
@@ -386,18 +416,19 @@ loopConn = RunService.Heartbeat:Connect(function()
                 waited = waited + 0.05
             end
 
-            if not btn then
-                setStatus("Tombol tak muncul", Color3.fromRGB(255, 100, 100))
-                task.wait(1)
-                busy = false
-                return
-            end
-
             local delayTime = S.Timing[S.KickMode] or 0.68
             setStatus("Timing " .. S.KickMode, Color3.fromRGB(255, 255, 100))
             task.wait(delayTime)
 
-            clickBtn(btn)
+            if btn then
+                clickBtn(btn)
+            else
+                setStatus("Mencoba eksekusi Remote...", Color3.fromRGB(255, 150, 50))
+            end
+            
+            -- EKSEKUSI REMOTES SEBAGAI BACKUP/UTAMA
+            fireRemotes(currentBlock)
+
             setStatus("Kicked!", Color3.fromRGB(100, 255, 100))
             task.wait(1.5)
         end

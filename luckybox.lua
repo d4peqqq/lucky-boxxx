@@ -420,7 +420,8 @@ loopConn = RunService.Heartbeat:Connect(function()
         clickBtn(btn) -- KLIK PERTAMA: Memulai tendangan & memunculkan bar
         
         -- Tunggu bar berjalan sampai Sempurna/Hebat/Bagus
-        local delayTime = S.Timing[S.KickMode] or 0.68
+        -- Delay disesuaikan agar lebih mudah dapat Excellent/Perfect (sekitar 0.55 detik)
+        local delayTime = S.Timing[S.KickMode] or 0.55
         setStatus("Timing " .. S.KickMode .. " ("..delayTime.."s)", Color3.fromRGB(255, 255, 100))
         task.wait(delayTime)
 
@@ -469,11 +470,19 @@ loopConn = RunService.Heartbeat:Connect(function()
         
         setStatus("Kicked!", Color3.fromRGB(100, 255, 100))
         
-        -- Step 4: Menunggu Box Mendarat & Karakter Terlempar (Berubah jadi brainrot)
-        setStatus("Menunggu efek brainrot...", Color3.fromRGB(255, 150, 50))
-        task.wait(3.5) -- Waktu delay landing
+        -- Step 4: Berlari lurus ke depan mengejar box
+        setStatus("Berlari lurus mengejar box...", Color3.fromRGB(100, 255, 255))
+        local hum = c:FindFirstChildOfClass("Humanoid")
+        if hum then
+            -- Jalan lurus searah pandangan karakter sejauh 1000 stud
+            local forwardPos = hrp.Position + (hrp.CFrame.LookVector * 1000)
+            hum:MoveTo(forwardPos)
+        end
         
-        -- Cek apakah posisi kita terlempar jauh dari Safe Zone setelah mendarat
+        -- Berlari lurus selama 4 detik sambil menunggu karakter berubah jadi brainrot
+        task.wait(4)
+        
+        -- Cek apakah posisi kita sudah jauh dari Safe Zone
         local newDist = (hrp.Position - SafeZonePos).Magnitude
         if newDist > 15 then
             -- Step 5: JALAN KAKI PULANG KE SAFE ZONE (Membawa lari brainrot)

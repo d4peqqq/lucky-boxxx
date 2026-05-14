@@ -172,9 +172,24 @@ StatusLabel.TextSize = 13
 StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
 StatusLabel.Parent = TabContainer
 
+local LastRollLabel = Instance.new("TextLabel")
+LastRollLabel.Size = UDim2.new(1, 0, 0, 20)
+LastRollLabel.Position = UDim2.new(0, 0, 0, 20)
+LastRollLabel.BackgroundTransparency = 1
+LastRollLabel.Text = "Last Roll: -"
+LastRollLabel.TextColor3 = Color3.fromRGB(150, 255, 150)
+LastRollLabel.Font = Enum.Font.GothamBold
+LastRollLabel.TextSize = 13
+LastRollLabel.TextXAlignment = Enum.TextXAlignment.Left
+LastRollLabel.Parent = TabContainer
+
 local function setStatus(txt, col)
     StatusLabel.Text = "Status: " .. txt
     StatusLabel.TextColor3 = col or Color3.fromRGB(180, 180, 180)
+end
+
+local function setLastRoll(txt)
+    LastRollLabel.Text = "Last Roll: " .. txt
 end
 
 local function makeToggle(parent, text, key)
@@ -364,6 +379,26 @@ local function walkTo(targetPos)
     end)
 
     while not arrived do task.wait(0.1) end
+end
+
+local function findBrainrotName()
+    local char = LP.Character
+    if char then
+        for _, v in ipairs(char:GetDescendants()) do
+            if v:IsA("BillboardGui") and v.Enabled then
+                local labels = {}
+                for _, lbl in ipairs(v:GetDescendants()) do
+                    if lbl:IsA("TextLabel") and lbl.Visible and lbl.Text ~= "" then
+                        table.insert(labels, lbl.Text)
+                    end
+                end
+                if #labels > 0 then
+                    return table.concat(labels, " | ")
+                end
+            end
+        end
+    end
+    return "Unknown"
 end
 
 local function findTapBtn()
@@ -558,6 +593,12 @@ loopConn = RunService.Heartbeat:Connect(function()
         if newDist > 15 then
             -- Step 5: JALAN KAKI PULANG KE SAFE ZONE (Membawa lari brainrot)
             setStatus("Membawa lari ke Safe Zone...", Color3.fromRGB(100, 255, 150))
+            
+            local rollName = findBrainrotName()
+            if rollName ~= "Unknown" and rollName ~= "" then
+                setLastRoll(rollName)
+            end
+            
             walkTo(SafeZonePos)
             setStatus("Berhasil disetor!", Color3.fromRGB(100, 255, 100))
         else

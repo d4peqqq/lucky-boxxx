@@ -16,6 +16,7 @@ local SafeZonePos = Vector3.new(695.3816528320312, 2.998032569885254, 223.676986
 
 local S = {
     AutoFarm = false,
+    AutoWeight = false,
     KickMode = "Sempurna",
     Timing = { Sempurna = 0.68, Hebat = 0.42, Bagus = 0.22 },
 }
@@ -38,7 +39,8 @@ local Window = WindUI:CreateWindow({
     Folder = "GreatHub",
     Size = UDim2.fromOffset(500, 400),
     OpenButton = {
-        Title = "Open GreatHub",
+        Title = "GreatHub",
+        Icon = "solar:ghost-bold",
         Enabled = true,
         Draggable = true,
         OnlyMobile = false,
@@ -107,6 +109,14 @@ FarmSection:Toggle({
     Value = S.AutoFarm,
     Callback = function(state)
         S.AutoFarm = state
+    end,
+})
+
+FarmSection:Toggle({
+    Title = "Auto Weight",
+    Value = S.AutoWeight,
+    Callback = function(state)
+        S.AutoWeight = state
     end,
 })
 
@@ -389,6 +399,42 @@ local busy = false
 local loopConn
 
 loopConn = RunService.Heartbeat:Connect(function()
+    if S.AutoWeight then
+        pcall(function()
+            local c = LP.Character
+            if c then
+                local weightTool = LP.Backpack:FindFirstChild("Weight") or LP.Backpack:FindFirstChild("Weight (1)")
+                if not weightTool then
+                    for _, v in ipairs(LP.Backpack:GetChildren()) do
+                        if v:IsA("Tool") and v.Name:lower():find("weight") then
+                            weightTool = v
+                            break
+                        end
+                    end
+                end
+                
+                if weightTool then
+                    local hum = c:FindFirstChildOfClass("Humanoid")
+                    if hum then hum:EquipTool(weightTool) end
+                end
+
+                local equippedWeight = c:FindFirstChild("Weight") or c:FindFirstChild("Weight (1)")
+                if not equippedWeight then
+                    for _, v in ipairs(c:GetChildren()) do
+                        if v:IsA("Tool") and v.Name:lower():find("weight") then
+                            equippedWeight = v
+                            break
+                        end
+                    end
+                end
+                
+                if equippedWeight then
+                    equippedWeight:Activate()
+                end
+            end
+        end)
+    end
+
     if not S.AutoFarm then
         busy = false
         return

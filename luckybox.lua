@@ -396,40 +396,28 @@ end
 -- 3. MAIN LOOP (AUTO FARM BRAINROT)
 -- ==========================================
 local busy = false
-local loopConn
+local lastWeightTime = 0
 
 loopConn = RunService.Heartbeat:Connect(function()
     if S.AutoWeight then
         pcall(function()
             local c = LP.Character
             if c then
-                local weightTool = LP.Backpack:FindFirstChild("Weight") or LP.Backpack:FindFirstChild("Weight (1)")
-                if not weightTool then
-                    for _, v in ipairs(LP.Backpack:GetChildren()) do
-                        if v:IsA("Tool") and v.Name:lower():find("weight") then
-                            weightTool = v
-                            break
-                        end
+                local tool = c:FindFirstChildOfClass("Tool")
+                if not tool then
+                    tool = LP.Backpack:FindFirstChildOfClass("Tool")
+                    if tool then
+                        local hum = c:FindFirstChildOfClass("Humanoid")
+                        if hum then hum:EquipTool(tool) end
                     end
                 end
                 
-                if weightTool then
-                    local hum = c:FindFirstChildOfClass("Humanoid")
-                    if hum then hum:EquipTool(weightTool) end
-                end
-
-                local equippedWeight = c:FindFirstChild("Weight") or c:FindFirstChild("Weight (1)")
-                if not equippedWeight then
-                    for _, v in ipairs(c:GetChildren()) do
-                        if v:IsA("Tool") and v.Name:lower():find("weight") then
-                            equippedWeight = v
-                            break
-                        end
-                    end
-                end
-                
-                if equippedWeight then
-                    equippedWeight:Activate()
+                if tool and tick() - lastWeightTime > 0.1 then
+                    lastWeightTime = tick()
+                    tool:Activate()
+                    
+                    local vu = game:GetService("VirtualUser")
+                    vu:ClickButton1(Vector2.new(50, 50))
                 end
             end
         end)

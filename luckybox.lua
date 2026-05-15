@@ -15,11 +15,43 @@ local PGui = LP:WaitForChild("PlayerGui")
 local SafeZonePos = Vector3.new(695.3816528320312, 2.998032569885254, 223.67698669433594)
 
 local S = {
+    -- Existing
     AutoFarm = false,
     AutoWeight = false,
     KickMode = "Sempurna",
     Timing = { Sempurna = 0.68, Hebat = 0.42, Bagus = 0.22 },
+    UseFilter = false,
+    FilterList = {},
+
+    -- New
+    GodMode = false,
+    FarmSnap = false,
+    FarmSnapFilter = "Name",
+    KickDelay = 0,
+    
+    AutoTrain = false,
+    AutoClickUpgrades = false,
+    AutoClaimBonus = false,
+    AutoCollectPlot = false,
+    AutoCollectPlotMin = 0,
+    AutoCollectNearby = false,
+
+    AutoRebirth = false,
+    AutoUpgradeBase = false,
+    AutoPlaceBrainrot = false,
+    AutoClaimOffline = false,
+    AutoSell = false,
+    
+    AutoSummon = false,
+    AutoAcceptGifts = false,
+
+    AntiAFK = false,
+    FPSBoost = false,
+    AutoReconnect = false,
 }
+
+local loopConn
+local genericLoopConn
 
 -- Bersihkan UI Lama
 for _, v in ipairs(PGui:GetChildren()) do
@@ -29,17 +61,17 @@ for _, v in ipairs(PGui:GetChildren()) do
 end
 
 -- ==========================================
--- 1. UI SETUP (WIND UI)
+-- 1. UI SETUP (WIND UI MEGA HUB)
 -- ==========================================
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 
 local Window = WindUI:CreateWindow({
-    Title = "GreatHub | Lucky Box Auto Farm",
+    Title = "MegaHub | Kick A Lucky Block",
     Icon = "solar:box-minimalistic-bold",
-    Folder = "GreatHub",
-    Size = UDim2.fromOffset(500, 400),
+    Folder = "MegaHub",
+    Size = UDim2.fromOffset(550, 400),
     OpenButton = {
-        Title = "GreatHub",
+        Title = "MegaHub",
         Icon = "solar:ghost-bold",
         Enabled = true,
         Draggable = true,
@@ -54,89 +86,77 @@ local Window = WindUI:CreateWindow({
     }
 })
 
-Window:Tag({
-    Title = "Auto Farm Active",
-    Icon = "solar:bolt-bold",
-    Color = Color3.fromHex("#10C550")
-})
+Window:Tag({ Title = "Undetected", Icon = "solar:shield-check-bold", Color = Color3.fromHex("#10C550") })
 
-local MainTab = Window:Tab({
-    Title = "Main",
-    Icon = "solar:home-2-bold",
-})
+-- TABS
+local MainTab = Window:Tab({ Title = "Farm", Icon = "solar:home-2-bold" })
+local UpgradesTab = Window:Tab({ Title = "Upgrades & Base", Icon = "solar:upload-bold" })
+local ShopTab = Window:Tab({ Title = "Shop & Summon", Icon = "solar:cart-large-minimalistic-bold" })
+local ServerTab = Window:Tab({ Title = "Misc & Server", Icon = "solar:server-bold" })
 
-local SettingsTab = Window:Tab({
-    Title = "Settings",
-    Icon = "solar:settings-bold",
-})
-
+-- ==================== MAIN TAB ====================
 local StatusSection = MainTab:Section({ Title = "Dashboard" })
-local StatusLabel = StatusSection:Paragraph({
-    Title = "Status",
-    Desc = "Idle"
-})
-local LastRollLabel = StatusSection:Paragraph({
-    Title = "Last Roll",
-    Desc = "-"
-})
+local StatusLabel = StatusSection:Paragraph({ Title = "Status", Desc = "Idle" })
+local LastRollLabel = StatusSection:Paragraph({ Title = "Last Roll", Desc = "-" })
 
 local function setStatus(txt, col)
-    pcall(function()
-        StatusLabel:SetDesc(txt)
-    end)
-    pcall(function()
-        StatusLabel:Set({ Title = "Status", Desc = txt })
-    end)
+    pcall(function() StatusLabel:SetDesc(txt) end)
+    pcall(function() StatusLabel:Set({ Title = "Status", Desc = txt }) end)
 end
 
 local function setLastRoll(txt)
-    pcall(function()
-        LastRollLabel:SetDesc(txt)
-    end)
-    pcall(function()
-        LastRollLabel:Set({ Title = "Last Roll", Desc = txt })
-    end)
-    WindUI:Notify({
-        Title = "Got Brainrot!",
-        Content = txt,
-        Duration = 3,
-    })
+    pcall(function() LastRollLabel:SetDesc(txt) end)
+    pcall(function() LastRollLabel:Set({ Title = "Last Roll", Desc = txt }) end)
+    WindUI:Notify({ Title = "Got Brainrot!", Content = txt, Duration = 3 })
 end
+
+local CombatSection = MainTab:Section({ Title = "Combat & Training" })
+CombatSection:Toggle({
+    Title = "God Mode Anti Damage",
+    Value = S.GodMode,
+    Callback = function(v) S.GodMode = v end,
+})
+CombatSection:Toggle({
+    Title = "Auto Train / Equip Weight",
+    Value = S.AutoWeight,
+    Callback = function(v) S.AutoWeight = v end,
+})
 
 local FarmSection = MainTab:Section({ Title = "Auto Farming" })
 FarmSection:Toggle({
     Title = "Auto Farm Brainrot",
     Value = S.AutoFarm,
-    Callback = function(state)
-        S.AutoFarm = state
-    end,
+    Callback = function(v) S.AutoFarm = v end,
 })
-
 FarmSection:Toggle({
-    Title = "Auto Weight",
-    Value = S.AutoWeight,
-    Callback = function(state)
-        S.AutoWeight = state
-    end,
+    Title = "Auto Farm Brainrot Snap",
+    Value = S.FarmSnap,
+    Callback = function(v) S.FarmSnap = v end,
+})
+FarmSection:Dropdown({
+    Title = "Snap Filter By",
+    Values = {"Name", "Mutation", "Rarity"},
+    Value = S.FarmSnapFilter,
+    Callback = function(v) S.FarmSnapFilter = v end,
+})
+FarmSection:Slider({
+    Title = "Kick Delay",
+    Step = 0.1,
+    Value = { Min = 0, Max = 5, Default = S.KickDelay },
+    Callback = function(v) S.KickDelay = v end,
 })
 
-local FilterSection = SettingsTab:Section({ Title = "Filter Configuration" })
-S.UseFilter = false
-S.FilterList = {}
-
+-- Existing Filter
+local FilterSection = MainTab:Section({ Title = "Farm Filter Configuration" })
 FilterSection:Toggle({
     Title = "Use Brainrot Filter",
     Value = S.UseFilter,
-    Callback = function(state)
-        S.UseFilter = state
-    end,
+    Callback = function(v) S.UseFilter = v end,
 })
-
 FilterSection:Input({
     Title = "Brainrot Filter",
     Desc = "Pisahkan dengan koma (misal: Ambalabu, Mutated)",
     Value = "",
-    Placeholder = "Ketik disini...",
     Callback = function(txt)
         S.FilterList = {}
         for word in string.gmatch(txt, '([^,]+)') do
@@ -147,23 +167,64 @@ FilterSection:Input({
         end
     end,
 })
-
-local MiscSection = SettingsTab:Section({ Title = "Miscellaneous" })
-MiscSection:Dropdown({
+FilterSection:Dropdown({
     Title = "Kick Mode",
     Values = { "Sempurna", "Hebat", "Bagus" },
     Value = S.KickMode,
-    Callback = function(option)
-        S.KickMode = option
-    end,
+    Callback = function(option) S.KickMode = option end,
 })
 
+-- ==================== UPGRADES & BASE TAB ====================
+local UpgradeSection = UpgradesTab:Section({ Title = "Upgrades" })
+UpgradeSection:Toggle({ Title = "Auto Click Kick Upgrades", Value = S.AutoClickUpgrades, Callback = function(v) S.AutoClickUpgrades = v end })
+UpgradeSection:Toggle({ Title = "Auto Claim Bonus", Value = S.AutoClaimBonus, Callback = function(v) S.AutoClaimBonus = v end })
+UpgradeSection:Toggle({ Title = "Auto Rebirth", Value = S.AutoRebirth, Callback = function(v) S.AutoRebirth = v end })
+UpgradeSection:Button({ Title = "Rebirth Once", Callback = function() print("Rebirth Once") end })
+
+local BaseSection = UpgradesTab:Section({ Title = "Base & Plot" })
+BaseSection:Toggle({ Title = "Auto Collect Coin From Plot", Value = S.AutoCollectPlot, Callback = function(v) S.AutoCollectPlot = v end })
+BaseSection:Toggle({ Title = "Auto Upgrade Base", Value = S.AutoUpgradeBase, Callback = function(v) S.AutoUpgradeBase = v end })
+BaseSection:Button({ Title = "Upgrade Base Once", Callback = function() print("Upgrade Base Once") end })
+BaseSection:Toggle({ Title = "Auto Place Brainrot", Value = S.AutoPlaceBrainrot, Callback = function(v) S.AutoPlaceBrainrot = v end })
+
+local CollectSection = UpgradesTab:Section({ Title = "Collecting" })
+CollectSection:Toggle({ Title = "Auto Collect Nearby", Value = S.AutoCollectNearby, Callback = function(v) S.AutoCollectNearby = v end })
+CollectSection:Toggle({ Title = "Auto Claim Offline Reward", Value = S.AutoClaimOffline, Callback = function(v) S.AutoClaimOffline = v end })
+
+-- ==================== SHOP & SUMMON TAB ====================
+local ShopSect = ShopTab:Section({ Title = "Selling & Shop" })
+ShopSect:Toggle({ Title = "Auto Sell Brainrot", Value = S.AutoSell, Callback = function(v) S.AutoSell = v end })
+ShopSect:Button({ Title = "Sell Once", Callback = function() print("Sell Once") end })
+ShopSect:Button({ Title = "Open Weight Shop", Callback = function() print("Open Weight Shop") end })
+ShopSect:Button({ Title = "Speed Upgrades", Callback = function() print("Speed Upgrades") end })
+
+local SummonSect = ShopTab:Section({ Title = "Summoning" })
+SummonSect:Toggle({ Title = "Auto Summon Machine", Value = S.AutoSummon, Callback = function(v) S.AutoSummon = v end })
+SummonSect:Dropdown({ Title = "Summon Event", Values = {"None", "Halloween", "Christmas"}, Value = S.SummonEvent, Callback = function(v) S.SummonEvent = v end })
+
+-- ==================== MISC & SERVER TAB ====================
+local GiftSection = ServerTab:Section({ Title = "Gifting" })
+GiftSection:Toggle({ Title = "Auto Accept Gifts", Value = S.AutoAcceptGifts, Callback = function(v) S.AutoAcceptGifts = v end })
+
+local SrvSection = ServerTab:Section({ Title = "Server Tools" })
+SrvSection:Toggle({ Title = "Anti AFK", Value = S.AntiAFK, Callback = function(v) S.AntiAFK = v end })
+SrvSection:Toggle({ Title = "FPS Boost", Value = S.FPSBoost, Callback = function(v) S.FPSBoost = v end })
+SrvSection:Toggle({ Title = "Auto Reconnect", Value = S.AutoReconnect, Callback = function(v) S.AutoReconnect = v end })
+SrvSection:Button({ Title = "Rejoin Server", Callback = function() game:GetService("TeleportService"):Teleport(game.PlaceId, LP) end })
+SrvSection:Button({ Title = "Server Hop", Callback = function() print("Server Hop") end })
+
+local VisualSect = ServerTab:Section({ Title = "Visual Tools" })
+VisualSect:Dropdown({ Title = "Weather Effect", Values = {"Normal", "Disco", "Void", "Virus"}, Value = "Normal", Callback = function(v) print("Weather " .. v) end })
+VisualSect:Button({ Title = "Apply Weather", Callback = function() print("Apply Weather") end })
+
+local MiscSection = ServerTab:Section({ Title = "Script Control" })
 MiscSection:Button({
     Title = "Tutup Script",
     Icon = "shredder",
     Callback = function()
         Window:Destroy()
         if loopConn then loopConn:Disconnect() end
+        if genericLoopConn then genericLoopConn:Disconnect() end
     end,
 })
 
@@ -552,6 +613,28 @@ loopConn = RunService.Heartbeat:Connect(function()
         task.wait(1)
         busy = false
     end)
+end)
+
+-- ==========================================
+-- 4. GENERIC LOOPS & ANTI AFK
+-- ==========================================
+
+-- Anti AFK
+LP.Idled:Connect(function()
+    if S.AntiAFK then
+        local vu = game:GetService("VirtualUser")
+        vu:CaptureController()
+        vu:ClickButton2(Vector2.new())
+    end
+end)
+
+-- Generic Fast Loop
+genericLoopConn = RunService.RenderStepped:Connect(function()
+    -- FPS Boost Logic
+    if S.FPSBoost then
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+        game.Lighting.GlobalShadows = false
+    end
 end)
 
 setLastRoll("-")

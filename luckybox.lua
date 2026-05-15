@@ -28,287 +28,126 @@ for _, v in ipairs(PGui:GetChildren()) do
 end
 
 -- ==========================================
--- 1. UI SETUP (MODERN HUB)
+-- 1. UI SETUP (WIND UI)
 -- ==========================================
-local SG = Instance.new("ScreenGui")
-SG.Name = "GreathubUI"
-SG.ResetOnSpawn = false
-SG.Parent = PGui
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 500, 0, 320)
-MainFrame.Position = UDim2.new(0.5, -250, 0.5, -160)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-MainFrame.BorderSizePixel = 0
-MainFrame.Active = true
-MainFrame.Parent = SG
+local Window = WindUI:CreateWindow({
+    Title = "GreatHub | Lucky Box Auto Farm",
+    Icon = "solar:box-minimalistic-bold",
+    Folder = "GreatHub",
+    Size = UDim2.fromOffset(500, 400),
+    OpenButton = {
+        Title = "Open GreatHub",
+        Enabled = true,
+        Draggable = true,
+    }
+})
 
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 8)
-UICorner.Parent = MainFrame
+Window:Tag({
+    Title = "Auto Farm Active",
+    Icon = "solar:bolt-bold",
+    Color = Color3.fromHex("#10C550")
+})
 
--- Dragging Logic
-local dragToggle, dragStart, startPos
-MainFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragToggle = true
-        dragStart = input.Position
-        startPos = MainFrame.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragToggle = false
-            end
-        end)
-    end
-end)
-UserInputService.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        if dragToggle then
-            local delta = input.Position - dragStart
-            MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end
-end)
+local MainTab = Window:Tab({
+    Title = "Main",
+    Icon = "solar:home-2-bold",
+})
 
-local Sidebar = Instance.new("Frame")
-Sidebar.Size = UDim2.new(0, 140, 1, 0)
-Sidebar.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-Sidebar.BorderSizePixel = 0
-Sidebar.Parent = MainFrame
+local SettingsTab = Window:Tab({
+    Title = "Settings",
+    Icon = "solar:settings-bold",
+})
 
-local SidebarCorner = Instance.new("UICorner")
-SidebarCorner.CornerRadius = UDim.new(0, 8)
-SidebarCorner.Parent = Sidebar
-
-local FixCorner = Instance.new("Frame")
-FixCorner.Size = UDim2.new(0, 10, 1, 0)
-FixCorner.Position = UDim2.new(1, -10, 0, 0)
-FixCorner.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-FixCorner.BorderSizePixel = 0
-FixCorner.Parent = Sidebar
-
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 50)
-Title.Position = UDim2.new(0, 0, 0, 10)
-Title.BackgroundTransparency = 1
-Title.Text = "GreatHub"
-Title.TextColor3 = Color3.fromRGB(100, 200, 255)
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 20
-Title.Parent = Sidebar
-
-local TabContainer = Instance.new("Frame")
-TabContainer.Size = UDim2.new(1, -150, 1, -20)
-TabContainer.Position = UDim2.new(0, 150, 0, 10)
-TabContainer.BackgroundTransparency = 1
-TabContainer.Parent = MainFrame
-
-local Tabs = {}
-local function createTab(name, isActive)
-    local frame = Instance.new("ScrollingFrame")
-    frame.Size = UDim2.new(1, 0, 1, -30)
-    frame.Position = UDim2.new(0, 0, 0, 30)
-    frame.BackgroundTransparency = 1
-    frame.BorderSizePixel = 0
-    frame.ScrollBarThickness = 4
-    frame.Visible = isActive
-    frame.Parent = TabContainer
-    
-    local layout = Instance.new("UIListLayout")
-    layout.Padding = UDim.new(0, 10)
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Parent = frame
-    
-    Tabs[name] = frame
-    return frame
-end
-
-local MainTab = createTab("Main", true)
-local SettingsTab = createTab("Settings", false)
-
-local function createTabBtn(y, name)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -20, 0, 35)
-    btn.Position = UDim2.new(0, 10, 0, y)
-    btn.BackgroundColor3 = Tabs[name].Visible and Color3.fromRGB(30, 30, 40) or Color3.fromRGB(20, 20, 25)
-    btn.Text = name
-    btn.TextColor3 = Tabs[name].Visible and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(150, 150, 150)
-    btn.Font = Enum.Font.GothamSemibold
-    btn.TextSize = 14
-    btn.Parent = Sidebar
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
-    
-    btn.MouseButton1Click:Connect(function()
-        for tName, tFrame in pairs(Tabs) do
-            tFrame.Visible = (tName == name)
-        end
-        for _, v in ipairs(Sidebar:GetChildren()) do
-            if v:IsA("TextButton") then
-                if v.Text == name then
-                    v.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-                    v.TextColor3 = Color3.fromRGB(255, 255, 255)
-                else
-                    v.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-                    v.TextColor3 = Color3.fromRGB(150, 150, 150)
-                end
-            end
-        end
-    end)
-end
-
-createTabBtn(70, "Main")
-createTabBtn(115, "Settings")
-
-local StatusLabel = Instance.new("TextLabel")
-StatusLabel.Size = UDim2.new(1, 0, 0, 20)
-StatusLabel.Position = UDim2.new(0, 0, 0, 0)
-StatusLabel.BackgroundTransparency = 1
-StatusLabel.Text = "Status: Idle"
-StatusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-StatusLabel.Font = Enum.Font.Gotham
-StatusLabel.TextSize = 13
-StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
-StatusLabel.Parent = TabContainer
-
-local LastRollLabel = Instance.new("TextLabel")
-LastRollLabel.Size = UDim2.new(1, 0, 0, 20)
-LastRollLabel.Position = UDim2.new(0, 0, 0, 20)
-LastRollLabel.BackgroundTransparency = 1
-LastRollLabel.Text = "Last Roll: -"
-LastRollLabel.TextColor3 = Color3.fromRGB(150, 255, 150)
-LastRollLabel.Font = Enum.Font.GothamBold
-LastRollLabel.TextSize = 13
-LastRollLabel.TextXAlignment = Enum.TextXAlignment.Left
-LastRollLabel.Parent = TabContainer
+local StatusSection = MainTab:Section({ Title = "Dashboard" })
+local StatusLabel = StatusSection:Paragraph({
+    Title = "Status",
+    Desc = "Idle"
+})
+local LastRollLabel = StatusSection:Paragraph({
+    Title = "Last Roll",
+    Desc = "-"
+})
 
 local function setStatus(txt, col)
-    StatusLabel.Text = "Status: " .. txt
-    StatusLabel.TextColor3 = col or Color3.fromRGB(180, 180, 180)
+    pcall(function()
+        StatusLabel:SetDesc(txt)
+    end)
+    pcall(function()
+        StatusLabel:Set({Title="Status", Desc=txt})
+    end)
 end
 
 local function setLastRoll(txt)
-    LastRollLabel.Text = "Last Roll: " .. txt
-end
-
-local function makeToggle(parent, text, key)
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, -10, 0, 45)
-    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-    frame.Parent = parent
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = frame
-    
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -70, 1, 0)
-    label.Position = UDim2.new(0, 15, 0, 0)
-    label.BackgroundTransparency = 1
-    label.Text = text
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.Font = Enum.Font.GothamSemibold
-    label.TextSize = 14
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = frame
-    
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 50, 0, 25)
-    btn.Position = UDim2.new(1, -65, 0.5, -12.5)
-    btn.BackgroundColor3 = S[key] and Color3.fromRGB(100, 255, 100) or Color3.fromRGB(255, 100, 100)
-    btn.Text = S[key] and "ON" or "OFF"
-    btn.TextColor3 = Color3.fromRGB(0, 0, 0)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 12
-    btn.Parent = frame
-    local corner2 = Instance.new("UICorner")
-    corner2.CornerRadius = UDim.new(0, 4)
-    corner2.Parent = btn
-    
-    btn.MouseButton1Click:Connect(function()
-        S[key] = not S[key]
-        btn.BackgroundColor3 = S[key] and Color3.fromRGB(100, 255, 100) or Color3.fromRGB(255, 100, 100)
-        btn.Text = S[key] and "ON" or "OFF"
+    pcall(function()
+        LastRollLabel:SetDesc(txt)
     end)
-end
-
-makeToggle(MainTab, "Auto Farm Brainrot", "AutoFarm")
-
-local function makeTextBox(parent, placeholder, callback)
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, -10, 0, 45)
-    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-    frame.Parent = parent
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = frame
-    
-    local tb = Instance.new("TextBox")
-    tb.Size = UDim2.new(1, -20, 1, 0)
-    tb.Position = UDim2.new(0, 10, 0, 0)
-    tb.BackgroundTransparency = 1
-    tb.Text = ""
-    tb.PlaceholderText = placeholder
-    tb.TextColor3 = Color3.fromRGB(255, 255, 255)
-    tb.Font = Enum.Font.Gotham
-    tb.TextSize = 12
-    tb.TextXAlignment = Enum.TextXAlignment.Left
-    tb.ClearTextOnFocus = false
-    tb.Parent = frame
-    
-    tb.FocusLost:Connect(function()
-        callback(tb.Text)
+    pcall(function()
+        LastRollLabel:Set({Title="Last Roll", Desc=txt})
     end)
-    return tb
+    WindUI:Notify({
+        Title = "Got Brainrot!",
+        Content = txt,
+        Duration = 3,
+    })
 end
 
+local FarmSection = MainTab:Section({ Title = "Auto Farming" })
+FarmSection:Toggle({
+    Title = "Auto Farm Brainrot",
+    Value = S.AutoFarm,
+    Callback = function(state)
+        S.AutoFarm = state
+    end,
+})
+
+local FilterSection = SettingsTab:Section({ Title = "Filter Configuration" })
 S.UseFilter = false
 S.FilterList = {}
 
--- Settings Tab
-makeToggle(SettingsTab, "Use Brainrot Filter", "UseFilter")
-makeTextBox(SettingsTab, "Filter: misal (Ambalabu, Mutated)", function(txt)
-    S.FilterList = {}
-    for word in string.gmatch(txt, '([^,]+)') do
-        local cleanWord = word:match("^%s*(.-)%s*$")
-        if cleanWord ~= "" then
-            table.insert(S.FilterList, cleanWord:upper())
+FilterSection:Toggle({
+    Title = "Use Brainrot Filter",
+    Value = S.UseFilter,
+    Callback = function(state)
+        S.UseFilter = state
+    end,
+})
+
+FilterSection:Input({
+    Title = "Brainrot Filter",
+    Desc = "Pisahkan dengan koma (misal: Ambalabu, Mutated)",
+    Value = "",
+    Placeholder = "Ketik disini...",
+    Callback = function(txt)
+        S.FilterList = {}
+        for word in string.gmatch(txt, '([^,]+)') do
+            local cleanWord = word:match("^%s*(.-)%s*$")
+            if cleanWord ~= "" then
+                table.insert(S.FilterList, cleanWord:upper())
+            end
         end
-    end
-end)
+    end,
+})
 
-local ModeBtn = Instance.new("TextButton")
-ModeBtn.Size = UDim2.new(1, -10, 0, 40)
-ModeBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
-ModeBtn.Text = "Kick Mode: " .. S.KickMode
-ModeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ModeBtn.Font = Enum.Font.GothamSemibold
-ModeBtn.TextSize = 14
-ModeBtn.Parent = SettingsTab
-local corner3 = Instance.new("UICorner")
-corner3.CornerRadius = UDim.new(0, 6)
-corner3.Parent = ModeBtn
+local MiscSection = SettingsTab:Section({ Title = "Miscellaneous" })
+MiscSection:Dropdown({
+    Title = "Kick Mode",
+    Values = {"Sempurna", "Hebat", "Bagus"},
+    Value = S.KickMode,
+    Callback = function(option)
+        S.KickMode = option
+    end,
+})
 
-local modes = {"Sempurna", "Hebat", "Bagus"}
-local modeIndex = 1
-ModeBtn.MouseButton1Click:Connect(function()
-    modeIndex = modeIndex + 1
-    if modeIndex > #modes then modeIndex = 1 end
-    S.KickMode = modes[modeIndex]
-    ModeBtn.Text = "Kick Mode: " .. S.KickMode
-end)
-
-local DestroyBtn = Instance.new("TextButton")
-DestroyBtn.Size = UDim2.new(1, -10, 0, 40)
-DestroyBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-DestroyBtn.Text = "Tutup Script"
-DestroyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-DestroyBtn.Font = Enum.Font.GothamBold
-DestroyBtn.TextSize = 14
-DestroyBtn.Parent = SettingsTab
-local corner4 = Instance.new("UICorner")
-corner4.CornerRadius = UDim.new(0, 6)
-corner4.Parent = DestroyBtn
+MiscSection:Button({
+    Title = "Tutup Script",
+    Icon = "shredder",
+    Callback = function()
+        Window:Destroy()
+        if loopConn then loopConn:Disconnect() end
+    end,
+})
 
 
 -- ==========================================
@@ -670,9 +509,5 @@ loopConn = RunService.Heartbeat:Connect(function()
     end)
 end)
 
-DestroyBtn.MouseButton1Click:Connect(function()
-    if loopConn then loopConn:Disconnect() end
-    SG:Destroy()
-end)
-
+setLastRoll("-")
 setStatus("Ready", Color3.fromRGB(100, 255, 100))

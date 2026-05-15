@@ -560,6 +560,16 @@ loopConn = RunService.Heartbeat:Connect(function()
             clickBtn(tapBtn)
         end
 
+        -- Fallback: Simulasi klik layar untuk game yang menggunakan InputBegan global
+        pcall(function()
+            local vim = game:GetService("VirtualInputManager")
+            local cam = workspace.CurrentCamera
+            local cx, cy = cam.ViewportSize.X / 2, 10 -- Top center
+            vim:SendMouseButtonEvent(cx, cy, 0, true, game, 1)
+            task.wait(0.01)
+            vim:SendMouseButtonEvent(cx, cy, 0, false, game, 1)
+        end)
+
         setStatus("Kicked!", Color3.fromRGB(100, 255, 100))
 
         -- Step 4: Berlari lurus ke depan mengejar box

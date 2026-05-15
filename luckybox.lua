@@ -18,6 +18,7 @@ local S = {
     -- Existing
     AutoFarm = false,
     AutoWeight = false,
+    WeightName = "",
     KickMode = "Sempurna",
     Timing = { Sempurna = 0.68, Hebat = 0.42, Bagus = 0.22 },
     UseFilter = false,
@@ -120,6 +121,13 @@ CombatSection:Toggle({
     Title = "Auto Train / Equip Weight",
     Value = S.AutoWeight,
     Callback = function(v) S.AutoWeight = v end,
+})
+CombatSection:Input({
+    Title = "Weight Tool Name",
+    Desc = "Isi dengan nama beban kamu (kosongi = otomatis cari)",
+    Value = S.WeightName,
+    Placeholder = "Ketik nama alat bebanmu di sini...",
+    Callback = function(v) S.WeightName = v end,
 })
 
 local FarmSection = MainTab:Section({ Title = "Auto Farming" })
@@ -473,9 +481,19 @@ loopConn = RunService.Heartbeat:Connect(function()
             local c = LP.Character
             if c then
                 local tool = nil
+                
+                local function isWeight(v)
+                    if not v:IsA("Tool") then return false end
+                    if S.WeightName and S.WeightName ~= "" then
+                        return v.Name:lower():find(S.WeightName:lower()) ~= nil
+                    end
+                    local n = v.Name:lower()
+                    return n:find("weight") or n:find("dumb") or n:find("train") or n:find("kg") or v.Name == "1"
+                end
+                
                 -- Cari tool di Character yang bukan brainrot
                 for _, v in ipairs(c:GetChildren()) do
-                    if v:IsA("Tool") and (v.Name:lower():find("weight") or v.Name:lower():find("dumb") or v.Name:lower():find("train") or v.Name:lower():find("kg") or v.Name == "1") then
+                    if isWeight(v) then
                         tool = v
                         break
                     end
@@ -484,7 +502,7 @@ loopConn = RunService.Heartbeat:Connect(function()
                 -- Jika belum dipegang, cari di Backpack lalu equip
                 if not tool then
                     for _, v in ipairs(LP.Backpack:GetChildren()) do
-                        if v:IsA("Tool") and (v.Name:lower():find("weight") or v.Name:lower():find("dumb") or v.Name:lower():find("train") or v.Name:lower():find("kg") or v.Name == "1") then
+                        if isWeight(v) then
                             tool = v
                             local hum = c:FindFirstChildOfClass("Humanoid")
                             if hum then hum:EquipTool(tool) end

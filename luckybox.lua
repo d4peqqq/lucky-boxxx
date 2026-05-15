@@ -28,7 +28,7 @@ local S = {
     FarmSnap = false,
     FarmSnapFilter = "Name",
     KickDelay = 0,
-    
+
     AutoTrain = false,
     AutoClickUpgrades = false,
     AutoClaimBonus = false,
@@ -41,7 +41,7 @@ local S = {
     AutoPlaceBrainrot = false,
     AutoClaimOffline = false,
     AutoSell = false,
-    
+
     AutoSummon = false,
     AutoAcceptGifts = false,
 
@@ -135,7 +135,7 @@ FarmSection:Toggle({
 })
 FarmSection:Dropdown({
     Title = "Snap Filter By",
-    Values = {"Name", "Mutation", "Rarity"},
+    Values = { "Name", "Mutation", "Rarity" },
     Value = S.FarmSnapFilter,
     Callback = function(v) S.FarmSnapFilter = v end,
 })
@@ -176,20 +176,25 @@ FilterSection:Dropdown({
 
 -- ==================== UPGRADES & BASE TAB ====================
 local UpgradeSection = UpgradesTab:Section({ Title = "Upgrades" })
-UpgradeSection:Toggle({ Title = "Auto Click Kick Upgrades", Value = S.AutoClickUpgrades, Callback = function(v) S.AutoClickUpgrades = v end })
+UpgradeSection:Toggle({ Title = "Auto Click Kick Upgrades", Value = S.AutoClickUpgrades, Callback = function(v) S.AutoClickUpgrades =
+    v end })
 UpgradeSection:Toggle({ Title = "Auto Claim Bonus", Value = S.AutoClaimBonus, Callback = function(v) S.AutoClaimBonus = v end })
 UpgradeSection:Toggle({ Title = "Auto Rebirth", Value = S.AutoRebirth, Callback = function(v) S.AutoRebirth = v end })
 UpgradeSection:Button({ Title = "Rebirth Once", Callback = function() print("Rebirth Once") end })
 
 local BaseSection = UpgradesTab:Section({ Title = "Base & Plot" })
-BaseSection:Toggle({ Title = "Auto Collect Coin From Plot", Value = S.AutoCollectPlot, Callback = function(v) S.AutoCollectPlot = v end })
+BaseSection:Toggle({ Title = "Auto Collect Coin From Plot", Value = S.AutoCollectPlot, Callback = function(v) S.AutoCollectPlot =
+    v end })
 BaseSection:Toggle({ Title = "Auto Upgrade Base", Value = S.AutoUpgradeBase, Callback = function(v) S.AutoUpgradeBase = v end })
 BaseSection:Button({ Title = "Upgrade Base Once", Callback = function() print("Upgrade Base Once") end })
-BaseSection:Toggle({ Title = "Auto Place Brainrot", Value = S.AutoPlaceBrainrot, Callback = function(v) S.AutoPlaceBrainrot = v end })
+BaseSection:Toggle({ Title = "Auto Place Brainrot", Value = S.AutoPlaceBrainrot, Callback = function(v) S.AutoPlaceBrainrot =
+    v end })
 
 local CollectSection = UpgradesTab:Section({ Title = "Collecting" })
-CollectSection:Toggle({ Title = "Auto Collect Nearby", Value = S.AutoCollectNearby, Callback = function(v) S.AutoCollectNearby = v end })
-CollectSection:Toggle({ Title = "Auto Claim Offline Reward", Value = S.AutoClaimOffline, Callback = function(v) S.AutoClaimOffline = v end })
+CollectSection:Toggle({ Title = "Auto Collect Nearby", Value = S.AutoCollectNearby, Callback = function(v) S.AutoCollectNearby =
+    v end })
+CollectSection:Toggle({ Title = "Auto Claim Offline Reward", Value = S.AutoClaimOffline, Callback = function(v) S.AutoClaimOffline =
+    v end })
 
 -- ==================== SHOP & SUMMON TAB ====================
 local ShopSect = ShopTab:Section({ Title = "Selling & Shop" })
@@ -200,7 +205,8 @@ ShopSect:Button({ Title = "Speed Upgrades", Callback = function() print("Speed U
 
 local SummonSect = ShopTab:Section({ Title = "Summoning" })
 SummonSect:Toggle({ Title = "Auto Summon Machine", Value = S.AutoSummon, Callback = function(v) S.AutoSummon = v end })
-SummonSect:Dropdown({ Title = "Summon Event", Values = {"None", "Halloween", "Christmas"}, Value = S.SummonEvent, Callback = function(v) S.SummonEvent = v end })
+SummonSect:Dropdown({ Title = "Summon Event", Values = { "None", "Halloween", "Christmas" }, Value = S.SummonEvent, Callback = function(
+    v) S.SummonEvent = v end })
 
 -- ==================== MISC & SERVER TAB ====================
 local GiftSection = ServerTab:Section({ Title = "Gifting" })
@@ -210,11 +216,13 @@ local SrvSection = ServerTab:Section({ Title = "Server Tools" })
 SrvSection:Toggle({ Title = "Anti AFK", Value = S.AntiAFK, Callback = function(v) S.AntiAFK = v end })
 SrvSection:Toggle({ Title = "FPS Boost", Value = S.FPSBoost, Callback = function(v) S.FPSBoost = v end })
 SrvSection:Toggle({ Title = "Auto Reconnect", Value = S.AutoReconnect, Callback = function(v) S.AutoReconnect = v end })
-SrvSection:Button({ Title = "Rejoin Server", Callback = function() game:GetService("TeleportService"):Teleport(game.PlaceId, LP) end })
+SrvSection:Button({ Title = "Rejoin Server", Callback = function() game:GetService("TeleportService"):Teleport(
+    game.PlaceId, LP) end })
 SrvSection:Button({ Title = "Server Hop", Callback = function() print("Server Hop") end })
 
 local VisualSect = ServerTab:Section({ Title = "Visual Tools" })
-VisualSect:Dropdown({ Title = "Weather Effect", Values = {"Normal", "Disco", "Void", "Virus"}, Value = "Normal", Callback = function(v) print("Weather " .. v) end })
+VisualSect:Dropdown({ Title = "Weather Effect", Values = { "Normal", "Disco", "Void", "Virus" }, Value = "Normal", Callback = function(
+    v) print("Weather " .. v) end })
 VisualSect:Button({ Title = "Apply Weather", Callback = function() print("Apply Weather") end })
 
 local MiscSection = ServerTab:Section({ Title = "Script Control" })
@@ -464,21 +472,30 @@ loopConn = RunService.Heartbeat:Connect(function()
         pcall(function()
             local c = LP.Character
             if c then
-                local tool = c:FindFirstChildOfClass("Tool")
-                if not tool then
-                    tool = LP.Backpack:FindFirstChildOfClass("Tool")
-                    if tool then
-                        local hum = c:FindFirstChildOfClass("Humanoid")
-                        if hum then hum:EquipTool(tool) end
+                local tool = nil
+                -- Cari tool di Character yang bukan brainrot
+                for _, v in ipairs(c:GetChildren()) do
+                    if v:IsA("Tool") and (v.Name:lower():find("weight") or v.Name:lower():find("dumb") or v.Name:lower():find("train") or v.Name:lower():find("kg") or v.Name == "1") then
+                        tool = v
+                        break
                     end
                 end
                 
+                -- Jika belum dipegang, cari di Backpack lalu equip
+                if not tool then
+                    for _, v in ipairs(LP.Backpack:GetChildren()) do
+                        if v:IsA("Tool") and (v.Name:lower():find("weight") or v.Name:lower():find("dumb") or v.Name:lower():find("train") or v.Name:lower():find("kg") or v.Name == "1") then
+                            tool = v
+                            local hum = c:FindFirstChildOfClass("Humanoid")
+                            if hum then hum:EquipTool(tool) end
+                            break
+                        end
+                    end
+                end
+
                 if tool and tick() - lastWeightTime > 0.1 then
                     lastWeightTime = tick()
                     tool:Activate()
-                    
-                    local vu = game:GetService("VirtualUser")
-                    vu:ClickButton1(Vector2.new(50, 50))
                 end
             end
         end)
@@ -542,24 +559,6 @@ loopConn = RunService.Heartbeat:Connect(function()
         if tapBtn and (tapBtn:IsA("TextButton") or tapBtn:IsA("ImageButton")) then
             clickBtn(tapBtn)
         end
-
-        -- Fallback 1: VirtualUser
-        pcall(function()
-            local vu = game:GetService("VirtualUser")
-            vu:Button1Down(Vector2.new(50, 50))
-            task.wait(0.01)
-            vu:Button1Up(Vector2.new(50, 50))
-        end)
-
-        -- Fallback 2: VirtualInputManager (Tengah atas layar, agar tidak nabrak UI Hub)
-        pcall(function()
-            local vim = game:GetService("VirtualInputManager")
-            local cam = workspace.CurrentCamera
-            local cx, cy = cam.ViewportSize.X / 2, 50
-            vim:SendMouseButtonEvent(cx, cy, 0, true, game, 1)
-            task.wait(0.02)
-            vim:SendMouseButtonEvent(cx, cy, 0, false, game, 1)
-        end)
 
         setStatus("Kicked!", Color3.fromRGB(100, 255, 100))
 

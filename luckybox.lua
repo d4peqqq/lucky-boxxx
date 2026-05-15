@@ -41,6 +41,14 @@ local Window = WindUI:CreateWindow({
         Title = "Open GreatHub",
         Enabled = true,
         Draggable = true,
+        OnlyMobile = false,
+        Scale = 0.5,
+        CornerRadius = UDim.new(1, 0),
+        StrokeThickness = 3,
+        Color = ColorSequence.new(
+            Color3.fromHex("#10C550"),
+            Color3.fromHex("#30FF6A")
+        ),
     }
 })
 
@@ -75,7 +83,7 @@ local function setStatus(txt, col)
         StatusLabel:SetDesc(txt)
     end)
     pcall(function()
-        StatusLabel:Set({Title="Status", Desc=txt})
+        StatusLabel:Set({ Title = "Status", Desc = txt })
     end)
 end
 
@@ -84,7 +92,7 @@ local function setLastRoll(txt)
         LastRollLabel:SetDesc(txt)
     end)
     pcall(function()
-        LastRollLabel:Set({Title="Last Roll", Desc=txt})
+        LastRollLabel:Set({ Title = "Last Roll", Desc = txt })
     end)
     WindUI:Notify({
         Title = "Got Brainrot!",
@@ -133,7 +141,7 @@ FilterSection:Input({
 local MiscSection = SettingsTab:Section({ Title = "Miscellaneous" })
 MiscSection:Dropdown({
     Title = "Kick Mode",
-    Values = {"Sempurna", "Hebat", "Bagus"},
+    Values = { "Sempurna", "Hebat", "Bagus" },
     Value = S.KickMode,
     Callback = function(option)
         S.KickMode = option
@@ -155,7 +163,7 @@ MiscSection:Button({
 -- ==========================================
 local function findTendang()
     -- Prioritaskan tombol dengan teks KICK tapi BUKAN TAP
-    
+
     -- 1. Cari di PlayerGui
     for _, sg in ipairs(PGui:GetChildren()) do
         if sg:IsA("ScreenGui") and sg.Name ~= "GreathubUI" then
@@ -168,7 +176,7 @@ local function findTendang()
                         local label = v:FindFirstChildWhichIsA("TextLabel")
                         if label then txt = label.Text end
                     end
-                    
+
                     local txtUp = txt:upper()
                     if (txtUp:find("KICK") or txtUp:find("TENDANG")) and not txtUp:find("TAP") then
                         if v.Visible then return v end
@@ -177,7 +185,7 @@ local function findTendang()
             end
         end
     end
-    
+
     -- 2. Cari di Workspace (Jika tombolnya menempel di udara / BillboardGui)
     local ws = game:GetService("Workspace")
     for _, v in ipairs(ws:GetDescendants()) do
@@ -189,14 +197,14 @@ local function findTendang()
                 local label = v:FindFirstChildWhichIsA("TextLabel")
                 if label then txt = label.Text end
             end
-            
+
             local txtUp = txt:upper()
             if (txtUp:find("KICK") or txtUp:find("TENDANG")) and not txtUp:find("TAP") then
                 return v
             end
         end
     end
-    
+
     return nil
 end
 
@@ -217,7 +225,10 @@ local function clickBtn(btn)
     end)
     if not clicked then
         pcall(function() btn.MouseButton1Down:Fire() end)
-        pcall(function() task.wait(0.01) btn.MouseButton1Up:Fire() end)
+        pcall(function()
+            task.wait(0.01)
+            btn.MouseButton1Up:Fire()
+        end)
         pcall(function() btn.MouseButton1Click:Fire() end)
         pcall(function() btn.Activated:Fire() end)
     end
@@ -314,7 +325,7 @@ end
 local function waitForPerfect()
     local rs = game:GetService("RunService")
     task.wait(0.05) -- Beri waktu UI untuk muncul dan bergerak
-    
+
     local candidates = {}
     for _, v in ipairs(PGui:GetDescendants()) do
         if (v:IsA("Frame") or v:IsA("ImageLabel")) and v.Visible then
@@ -325,7 +336,7 @@ local function waitForPerfect()
             })
         end
     end
-    
+
     local targetBar = nil
     local t0 = tick()
     while tick() - t0 < 0.25 do
@@ -338,7 +349,7 @@ local function waitForPerfect()
         end
         if targetBar then break end
     end
-    
+
     if targetBar then
         setStatus("Membaca pergerakan bar...", Color3.fromRGB(150, 255, 150))
         local timeout = tick()
@@ -351,12 +362,12 @@ local function waitForPerfect()
                     scale = targetBar.AbsoluteSize.Y / pSize
                 end
             end
-            
+
             -- Jika bar menggunakan persentase tinggi (0 ke 1)
             local targetScale = 0.85 -- Perfect
             if S.KickMode == "Hebat" then targetScale = 0.65 end
             if S.KickMode == "Bagus" then targetScale = 0.35 end
-            
+
             if scale >= targetScale then
                 break
             end
@@ -426,7 +437,7 @@ loopConn = RunService.Heartbeat:Connect(function()
             setStatus("Klik Tombol KICK!", Color3.fromRGB(255, 200, 50))
             clickBtn(btn) -- KLIK PERTAMA: Memulai tendangan & memunculkan bar
         end
-        
+
         -- Tunggu bar berjalan sampai Sempurna/Hebat/Bagus dengan monitor dinamis
         setStatus("Membidik " .. S.KickMode .. "...", Color3.fromRGB(255, 255, 100))
         waitForPerfect()
@@ -436,13 +447,13 @@ loopConn = RunService.Heartbeat:Connect(function()
         if tapBtn and (tapBtn:IsA("TextButton") or tapBtn:IsA("ImageButton")) then
             clickBtn(tapBtn)
         end
-        
+
         -- Fallback 1: VirtualUser
         pcall(function()
             local vu = game:GetService("VirtualUser")
-            vu:Button1Down(Vector2.new(50,50))
+            vu:Button1Down(Vector2.new(50, 50))
             task.wait(0.01)
-            vu:Button1Up(Vector2.new(50,50))
+            vu:Button1Up(Vector2.new(50, 50))
         end)
 
         -- Fallback 2: VirtualInputManager (Tengah atas layar, agar tidak nabrak UI Hub)
@@ -454,9 +465,9 @@ loopConn = RunService.Heartbeat:Connect(function()
             task.wait(0.02)
             vim:SendMouseButtonEvent(cx, cy, 0, false, game, 1)
         end)
-        
+
         setStatus("Kicked!", Color3.fromRGB(100, 255, 100))
-        
+
         -- Step 4: Berlari lurus ke depan mengejar box
         setStatus("Berlari lurus mengejar box...", Color3.fromRGB(100, 255, 255))
         local hum = c:FindFirstChildOfClass("Humanoid")
@@ -465,20 +476,20 @@ loopConn = RunService.Heartbeat:Connect(function()
             local forwardPos = hrp.Position + (hrp.CFrame.LookVector * 1000)
             hum:MoveTo(forwardPos)
         end
-        
+
         -- Berlari lurus selama 4 detik sambil menunggu karakter berubah jadi brainrot
         task.wait(4)
-        
+
         -- Cek apakah posisi kita sudah jauh dari Safe Zone
         local newDist = (hrp.Position - SafeZonePos).Magnitude
         if newDist > 15 then
             -- Step 5: JALAN KAKI PULANG KE SAFE ZONE (Membawa lari brainrot)
-            
+
             local rollName = findBrainrotName()
             if rollName ~= "Unknown" and rollName ~= "" then
                 setLastRoll(rollName)
             end
-            
+
             -- Filter Logic
             local shouldKeep = true
             if S.UseFilter and #S.FilterList > 0 and rollName ~= "Unknown" then
@@ -491,7 +502,7 @@ loopConn = RunService.Heartbeat:Connect(function()
                     end
                 end
             end
-            
+
             if shouldKeep then
                 setStatus("Membawa lari ke Safe Zone...", Color3.fromRGB(100, 255, 150))
                 walkTo(SafeZonePos)

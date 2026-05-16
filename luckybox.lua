@@ -514,7 +514,7 @@ loopConn = RunService.Heartbeat:Connect(function()
                         return v.Name:lower():find(S.WeightName:lower()) ~= nil
                     end
                     local n = v.Name:lower()
-                    return n:find("weight") or n:find("dumb") or n:find("train") or n:find("kg") or n:find("bone") or n:find("stone") or n:find("barbell") or n:find("block") or v.Name == "1"
+                    return n:find("weight") or n:find("dumb") or n:find("barbell")
                 end
                 
                 -- Cari tool di Character yang bukan brainrot

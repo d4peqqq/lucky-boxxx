@@ -54,6 +54,26 @@ local S = {
 local loopConn
 local genericLoopConn
 
+-- ==========================================
+-- ANTI FREEZE (WALKSPEED BYPASS)
+-- ==========================================
+pcall(function()
+    local mt = getrawmetatable(game)
+    local oldNewIndex = mt.__newindex
+    setreadonly(mt, false)
+    
+    mt.__newindex = newcclosure(function(t, k, v)
+        if not checkcaller() and t:IsA("Humanoid") and k == "WalkSpeed" then
+            if S.AutoWeight and tonumber(v) and tonumber(v) < 16 then
+                return -- Abaikan script game yang mencoba membekukan kecepatan
+            end
+        end
+        return oldNewIndex(t, k, v)
+    end)
+    
+    setreadonly(mt, true)
+end)
+
 -- Bersihkan UI Lama
 for _, v in ipairs(PGui:GetChildren()) do
     if v.Name == "GreathubUI" or v.Name == "SimpleKickUI" then
@@ -480,6 +500,12 @@ loopConn = RunService.Heartbeat:Connect(function()
         pcall(function()
             local c = LP.Character
             if c then
+                local hum = c:FindFirstChildOfClass("Humanoid")
+                -- Fallback anti freeze jika executor tidak support mt hook
+                if hum and hum.WalkSpeed < 16 then
+                    hum.WalkSpeed = 16
+                end
+                
                 local tool = nil
                 
                 local function isWeight(v)
